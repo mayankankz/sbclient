@@ -86,8 +86,8 @@ function Header() {
       ],
     },
     {
-      label: "Pages",
-      to: "/",
+      label: "Editor",
+      to: "/editor",
       dropdown: true,
       items: [
         { label: "About Us", to: "/about-us-1" },

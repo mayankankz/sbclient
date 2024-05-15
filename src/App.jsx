@@ -45,6 +45,7 @@ import ErrorPage from "./Pages/error-page/ErrorPage";
 import TAndC from "./Pages/term-And-Condition/tAndC";
 import Privacy from "./Pages/term-And-Condition/privacy";
 import { useEffect, useState } from "react";
+import Editor from "./Pages/adminDashboard/Editor/Editor";
 function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
@@ -114,6 +115,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/index-2" element={<Index2 />} />
+                <Route path="/editor" element={<Editor />} />
                 <Route path="/index-3" element={<Index3 />} />
                 <Route path="/about-us-1" element={<About_us_1 />} />
                 <Route path="/about-us-2" element={<About_us_2 />} />
