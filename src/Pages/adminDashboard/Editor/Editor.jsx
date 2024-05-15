@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import Draggable from 'react-draggable';
-import { Resizable } from 'react-resizable';
+import { ResizableBox } from 'react-resizable';
 import 'react-resizable/css/styles.css'; // Ensure you have the styles for Resizable
-
 
 const Editor = () => {
   const [elements, setElements] = useState([]);
@@ -50,20 +49,25 @@ const Editor = () => {
         {elements.map((el, index) => (
           <Draggable
             key={el.id}
-            position={el.position}
-            onStop={handleDrag(index)}
+            defaultPosition={el.position}
+            onDrag={handleDrag(index)}
           >
-            <Resizable
-              width={el.size.width}
-              height={el.size.height}
-              onResize={handleResize(index)}
-            >
-              <div className={`element ${el.type}`} style={{ width: el.size.width, height: el.size.height }}>
-                {el.type === 'text' && el.content}
-                {el.type === 'button' && <button>{el.content}</button>}
-                {el.type === 'image' && <img src={el.content} alt="img" />}
-              </div>
-            </Resizable>
+            <div>
+              <ResizableBox
+                width={el.size.width}
+                height={el.size.height}
+                onResize={handleResize(index)}
+                minConstraints={[50, 50]}
+                maxConstraints={[500, 500]}
+                style={{ border: '1px solid black' }}
+              >
+                <div className={`element ${el.type}`} style={{ width: '100%', height: '100%' }}>
+                  {el.type === 'text' && el.content}
+                  {el.type === 'button' && <button>{el.content}</button>}
+                  {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
+                </div>
+              </ResizableBox>
+            </div>
           </Draggable>
         ))}
       </div>

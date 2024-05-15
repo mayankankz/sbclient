@@ -435,7 +435,7 @@ function Header() {
                       </h6>
                       <div className="product-meta">
                         <span className="mx-2 text-primary">
-                          ${product.salePrice.toFixed(2)}
+                          ${product.salePrice}
                         </span>
                         <span className="text-muted">x {product.quantity}</span>
                       </div>
@@ -459,7 +459,7 @@ function Header() {
           <hr className="my-5" />
           <div className="d-flex justify-content-between align-items-center mb-8">
             <span className="text-muted">Subtotal:</span>
-            <span className="text-white">${subtotal.toFixed(2)}</span>
+            <span className="text-white">${subtotal}</span>
           </div>
           <Link
             to="/product-cart"
@@ -531,7 +531,7 @@ function Header() {
                       </h6>
                       <div className="product-meta">
                         <span className="mx-2 text-primary">
-                          ${product.salePrice.toFixed(2)}
+                          ${product.salePrice}
                         </span>
                         <span className="text-muted">x {product.quantity}</span>
                       </div>
@@ -547,7 +547,7 @@ function Header() {
           <hr className="my-5" />
           <div className="d-flex justify-content-between align-items-center mb-8">
             <span className="text-muted">Subtotal:</span>
-            <span className="text-white">${subtotalCart.toFixed(2)}</span>
+            <span className="text-white">${subtotalCart}</span>
           </div>
           <Link
             to="/product-cart"
