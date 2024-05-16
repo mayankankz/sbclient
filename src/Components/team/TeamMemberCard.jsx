@@ -21,7 +21,7 @@ const TeamMembers = ({ teamMembers }) => {
       {teamMembers.map((member) => (
         <Col key={member.id} lg="3" md="6" className="mb-4 mb-lg-0">
           <Card className="hover-translate bg-white shadow px-3 pt-4 pb-5 rounded-4">
-            <div className="d-flex align-items-center">
+            <div className="">
               <h6 className="mb-0 me-2">
                 <Link
                   className="btn-link"
@@ -33,13 +33,13 @@ const TeamMembers = ({ teamMembers }) => {
                   {member.name}
                 </Link>
               </h6>
-              <span className="text-muted">- {member.position}</span>
+              <span className="text-muted">{member.position}</span>
             </div>
             <div className="mt-3 mb-4">
               <CardImg
                 top
                 width="100%"
-                src={member.imgSrc}
+                src={`../src/assets/${member.imgSrc}`}
                 alt={member.name}
                 className="img-fluid rounded-4"
               />

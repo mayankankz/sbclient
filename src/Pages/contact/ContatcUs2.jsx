@@ -44,9 +44,7 @@ function ContatcUs2() {
             <Col lg={6} className="col-12 mb-lg-0">
               <ContactInfo contactInfo={contactInfo} />
             </Col>
-            <Col lg={6} className="col-12">
-              <MapSection />
-            </Col>
+            
           </Row>
         </Container>
       </section>

@@ -9,6 +9,7 @@ import Pricing from "../../Components/pricing/Pricing";
 import Blog from "../../Components/blog/Blog";
 import Contact from "../../Components/contact/Contact";
 import Testimonial2 from "../../Components/testimonial/Testimonial2";
+import Portfolio from "../../Components/portfolio/Protfolio";
 
 function index2() {
   return (
@@ -16,12 +17,9 @@ function index2() {
       <HeroBanner2 />
       <div className="page-content">
         <Feature />
+        <Portfolio />
         <About2 />
-        <Testimonial2 />
-        <Faq />
         <Team />
-        <Pricing />
-        <Blog />
         <Contact />
       </div>
     </div>

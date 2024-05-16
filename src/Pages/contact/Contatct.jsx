@@ -14,17 +14,11 @@ function Contatct() {
   };
   const contactInfo = [
     {
-      region: "North America",
-      address: "423B, Road Worldwide Country, USA",
-      phone: "+91-234-567-8900",
-      email: "themeht23@gmail.com",
-    },
-    {
-      region: "United Kingdom",
-      address: "423B, Road Worldwide Country, USA",
-      phone: "+91-234-567-8900",
-      email: "themeht23@gmail.com",
-    },
+      region: "Madhya Pradesh, India",
+      address: "Gadarwara, Hospital Road, Narsinghpur-487551, Madhya Pradesh, India",
+      phone: "+91 9584730838",
+      email: "sbonlineservicesgar@gmail.com",
+    }
   ];
   return (
     <div className="page-wrapper">
@@ -45,15 +39,7 @@ function Contatct() {
           </Row>
         </Container>
       </section>
-      <section className="overflow-hidden pt-0">
-        <Container fluid className="px-0">
-          <Row>
-            <Col>
-              <MapSection />
-            </Col>
-          </Row>
-        </Container>
-      </section>
+     
     </div>
   );
 }

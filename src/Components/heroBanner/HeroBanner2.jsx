@@ -35,7 +35,10 @@ function HeroBanner2() {
               </Col>
               <Col xs={12} lg={6} className="ps-lg-8">
                 <h1 className="font-w-6 mb-5">
-                Empowering Your Digital Vision.{" "}
+                <span className="title-bg text-primary position-relative font-w-7 d-inline-block">
+                Empowering
+                </span> Your Digital Vision.{" "}
+               
                 </h1>
                 <p className="lead mb-6">
                 Unleash Innovation With Our Comprehensive Solutions And IT Services.

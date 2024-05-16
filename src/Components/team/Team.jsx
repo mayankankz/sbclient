@@ -5,11 +5,11 @@ function Team() {
   const teamMembers = [
     {
       id: 1,
-      name: "Cherie Kerl",
-      position: "Manager",
+      name: "shailendra goswami",
+      position: "Director/Founder",
       imgSrc: "images/team/01.jpg",
       emaiId: "themeht23@gmail.com",
-      phoneNo: "+91-234-567-8900",
+      phoneNo: "+91 9584730838",
       socialMedia: [
         { icon: "bi-facebook", link: "/index-2" },
         { icon: "bi-dribbble", link: "/index-2" },
@@ -19,11 +19,11 @@ function Team() {
     },
     {
       id: 2,
-      name: "Rashvin Kathiriya",
-      position: "CEO",
-      imgSrc: "images/team/02.jpg",
-      emaiId: "rashvinKathiriya10@gmail.com",
-      phoneNo: "+91-234-567-8900",
+      name: "Mayank GiriGoswami",
+      position: "Technical Head",
+      imgSrc: "images/team/mayank.jpg",
+      emaiId: "mayankgirigoswami2212@gmail.com",
+      phoneNo: "+91-7869498557",
       socialMedia: [
         { icon: "bi-facebook", link: "/index-2" },
         { icon: "bi-dribbble", link: "/index-2" },
@@ -33,8 +33,8 @@ function Team() {
     },
     {
       id: 3,
-      name: "Loung Willey",
-      position: "Founder",
+      name: "Sachin",
+      position: "operation analyst",
       imgSrc: "images/team/03.jpg",
       emaiId: "themeht23@gmail.com",
       phoneNo: "+91-234-567-8900",
@@ -47,8 +47,8 @@ function Team() {
     },
     {
       id: 4,
-      name: "Angel Jessica",
-      position: "Supervisor",
+      name: "Naman",
+      position: "Marketing Head",
       imgSrc: "images/team/04.jpg",
       emaiId: "themeht23@gmail.com",
       phoneNo: "+91-234-567-8900",
@@ -72,8 +72,7 @@ function Team() {
                 </h6>
                 <h2 className="font-w-6">Meet Our Expert Advisor</h2>
                 <p className="lead mb-0">
-                  We are a team of experienced developers who are passionate
-                  about their work. No coding required to make customizations.
+                We are a team of experienced developers passionate about delivering cutting-edge technology solutions. No effort required for seamless customizations.
                 </p>
               </div>
             </Col>

@@ -181,7 +181,7 @@ header .navbar-nav .nav-item { margin: 0 2px }
 .navbar-nav .nav-item.dropdown .dropdown-menu .dropdown-item { padding: .50rem 1.5rem; font-size: 15px; border-radius: 1rem; margin-bottom: 7px; font-weight: 500;}
 .navbar-nav .nav-item.dropdown .dropdown-menu li:last-child .dropdown-item { margin-bottom: 0; }
 
-.nav-link.dropdown-toggle::after {font-family: bootstrap-icons !important; content: "\F4FE"; border: none; margin-left: 0.1em; vertical-align: middle;}
+.nav-link.dropdown-toggle::after {font-family: bootstrap-icons !important; content: ""; border: none; margin-left: 0.1em; vertical-align: middle;}
 
 @media (max-width:991.98px) {
 /*Header*/

@@ -46,6 +46,8 @@ import TAndC from "./Pages/term-And-Condition/tAndC";
 import Privacy from "./Pages/term-And-Condition/privacy";
 import { useEffect, useState } from "react";
 import Editor from "./Pages/adminDashboard/Editor/Editor";
+import DashBoard from "./Pages/adminDashboard/Dashbaord/DashBoard";
+import AdminLayout from "./Pages/adminDashboard/Layout";
 function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +82,8 @@ function App() {
     window.scrollTo(0, 0); // Scroll to the top when the component mounts
   }, [location.pathname]);
 
+  const isAdminRoute = location.pathname.includes("admin");
+
   return (
     <>
       <ToastContainer
@@ -111,11 +115,11 @@ function App() {
             </Routes>
           ) : (
             <div className="page-wrapper">
-              <Header />
+            {!isAdminRoute ? <Header /> : ""}
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/index-2" element={<Index2 />} />
-                <Route path="/editor" element={<Editor />} />
+                
                 <Route path="/index-3" element={<Index3 />} />
                 <Route path="/about-us-1" element={<About_us_1 />} />
                 <Route path="/about-us-2" element={<About_us_2 />} />
@@ -155,12 +159,17 @@ function App() {
                 <Route path="/terms-and-conditions" element={<TAndC />} />
                 <Route path="/privacy-policy" element={<Privacy />} />
 
+                <Route path="/admin/*" element={<AdminLayout />}>
+                <Route index element={<DashBoard />} />
+                <Route path="editor" element={<Editor />} />
+                </Route>
+
                 {/* <Route path="/:mediaType/:id" element={<Details />} />
         <Route path="/search/:query" element={<SearchResult />} />
         <Route path="/explore/:mediaType" element={<Explore />} />
         <Route path="*" element={<PageNotFound />} /> */}
               </Routes>
-              <Footer />
+              {!isAdminRoute ? <Footer /> : ""}
               <BackToTop />
             </div>
           )}

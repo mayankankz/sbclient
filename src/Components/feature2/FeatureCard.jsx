@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Col } from "reactstrap";
 
 const FeatureCard = ({ id, title, description, image }) => {
@@ -8,7 +9,7 @@ const FeatureCard = ({ id, title, description, image }) => {
         <div>
           <h4 className="mb-3 text-white">{title}</h4>
           <p className="mb-4 text-light">{description}</p>
-          <a className="btn-arrow" href="#"></a>
+          <Link className="btn-arrow" ></Link>
         </div>
         <div className="mt-6">
           <img className="img-fluid" src={image} alt="" />

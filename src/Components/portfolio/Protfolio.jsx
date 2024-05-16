@@ -42,7 +42,7 @@ debugger
               </h2>
             </Col>
             <Col xs="12" lg="6" className="ms-auto">
-              <div className="portfolio-filter d-sm-flex align-items-center justify-content-lg-end">
+              <div className="portfolio-filter d-sm-flex align-items-center justify-content-lg-end overflow-scroll">
                 <Nav>
                   <Button
                     className={activeTab === "all" ? "is-checked" : ""}
@@ -62,6 +62,7 @@ debugger
                   >
                     App Design
                   </Button>
+                  
                   <Button
                     className={activeTab === "Branding" ? "is-checked" : ""}
                     onClick={() => handleTabClick("Branding")}
@@ -78,7 +79,7 @@ debugger
                 <div className="hover-translate position-relative bg-white shadow p-3 rounded-4">
                   <img
                     className="img-fluid w-100 rounded-4"
-                    src={item.imgSrc}
+                    src={`../src/assets${item.imgSrc}`}
                     alt=""
                   />
                   <div className="portfolio-title d-flex justify-content-between align-items-center mt-3">
