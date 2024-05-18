@@ -8,14 +8,14 @@ const Page_Heading = ({
   secondBreadcrumb,
 }) => {
   return (
-    <section className="position-relative overflow-hidden">
+    <section  className="position-relative overflow-hidden">
       <Container>
         <Row className="text-center">
           <Col>
             <h1 className="mb-3">{title}</h1>
             <Breadcrumb className="bg-white shadow d-inline-block px-4 py-2 rounded-4">
               <BreadcrumbItem className="mt-2">
-                <Link className="text-dark" to="/index">
+                <Link className="text-dark" to="/">
                   Home
                 </Link>
               </BreadcrumbItem>

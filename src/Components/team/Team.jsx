@@ -1,13 +1,14 @@
 import React from "react";
 import { Container, Row, Col } from "reactstrap";
 import TeamMembers from "./TeamMemberCard";
+import chintu from '../../assets/images/team/chintu.jpeg'
 function Team() {
   const teamMembers = [
     {
       id: 1,
       name: "shailendra goswami",
-      position: "Director/Founder",
-      imgSrc: "images/team/01.jpg",
+      position: "Founder / CEO",
+      imgSrc: chintu,
       emaiId: "themeht23@gmail.com",
       phoneNo: "+91 9584730838",
       socialMedia: [
@@ -20,7 +21,7 @@ function Team() {
     {
       id: 2,
       name: "Mayank GiriGoswami",
-      position: "Technical Head",
+      position: "CTO / Tech Specialist",
       imgSrc: "images/team/mayank.jpg",
       emaiId: "mayankgirigoswami2212@gmail.com",
       phoneNo: "+91-7869498557",
@@ -34,8 +35,8 @@ function Team() {
     {
       id: 3,
       name: "Sachin",
-      position: "operation analyst",
-      imgSrc: "images/team/03.jpg",
+      position: "Marketing/Oprations Head",
+      imgSrc: "images/team/sachin.jpeg",
       emaiId: "themeht23@gmail.com",
       phoneNo: "+91-234-567-8900",
       socialMedia: [
@@ -48,8 +49,8 @@ function Team() {
     {
       id: 4,
       name: "Naman",
-      position: "Marketing Head",
-      imgSrc: "images/team/04.jpg",
+      position: "Marketing analyst",
+      imgSrc: "images/team/Naman.jpeg",
       emaiId: "themeht23@gmail.com",
       phoneNo: "+91-234-567-8900",
       socialMedia: [

@@ -38,7 +38,7 @@ debugger
           <Row className="align-items-end mb-8">
             <Col xs="12" lg="5">
               <h2 className="mb-5 mb-lg-0">
-                Some of our Creative & Finest Work.
+                Our Services
               </h2>
             </Col>
             <Col xs="12" lg="6" className="ms-auto">
@@ -79,7 +79,7 @@ debugger
                 <div className="hover-translate position-relative bg-white shadow p-3 rounded-4">
                   <img
                     className="img-fluid w-100 rounded-4"
-                    src={`../src/assets${item.imgSrc}`}
+                    src={`../assets${item.imgSrc}`}
                     alt=""
                   />
                   <div className="portfolio-title d-flex justify-content-between align-items-center mt-3">
@@ -88,7 +88,7 @@ debugger
                       <h6 className="mb-0">
                         <Link
                           className="btn-link"
-                          to="/portfolio-single"
+                          to="/service"
                           onClick={() => {
                             dispatch(setSelectedPortFolio(item.title));
                           }}
@@ -99,7 +99,7 @@ debugger
                     </div>
                     <a
                       className="popup-img btn-link"
-                      href={`../assets/${item.imgSrc}`}
+                      href={item.imgSrc}
                       onClick={(e) => {
                         e.preventDefault();
                         setPhotoIndex(index);

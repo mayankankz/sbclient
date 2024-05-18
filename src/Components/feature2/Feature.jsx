@@ -75,7 +75,7 @@ function Feature() {
                 key={feature.title}
                 title={feature.title}
                 description={feature.description}
-                image={feature.image}
+                image={`../src/assets/${feature.image}`}
                 id={index}
               />
             ))}

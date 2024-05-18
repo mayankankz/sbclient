@@ -77,7 +77,7 @@ function Header() {
   const navItems = [
     {
       label: "Home",
-      to: "/index-2",
+      to: "/",
       dropdown: false,
       items: [
         { label: "Landing 1", to: "/" },
@@ -86,49 +86,8 @@ function Header() {
       ],
     },
     {
-      label: "Editor",
-      to: "/editor",
-      dropdown: true,
-      items: [
-        { label: "About Us", to: "/about-us-1" },
-        { label: "About Us 2", to: "/about-us-2" },
-        { label: "Team", to: "/team" },
-        { label: "Team Single", to: "/team-single" },
-        { label: "Pricing", to: "/pricing" },
-        { label: "Faq", to: "/faq" },
-        { label: "Sign In", to: "/login" },
-        { label: "Sign Up", to: "/signup" },
-        { label: "Maintenance", to: "/maintenance" },
-        { label: "Coming Soon", to: "/coming-soon" },
-        { label: "Error 404", to: "/error-404" },
-      ],
-    },
-    {
-      label: "Shop",
-      to: "/",
-      dropdown: true,
-      items: [
-        { label: "Product Grid", to: "/product-grid" },
-        { label: "Product List", to: "/product-list" },
-        { label: "Product Single", to: "/product-single" },
-        { label: "Cart", to: "/product-cart" },
-        { label: "Checkout", to: "/product-checkout" },
-        { label: "Order Completed", to: "/order-complete" },
-        { label: "Forgot Password", to: "/forgot-password" },
-      ],
-    },
-    {
-      label: "Portfolio",
-      to: "/",
-      dropdown: true,
-      items: [
-        { label: "Portfolio Card", to: "/portfolio-card" },
-        { label: "Portfolio Single", to: "/portfolio-single" },
-      ],
-    },
-    {
-      label: "Features",
-      to: "/",
+      label: "Services",
+      to: "/services",
       dropdown: true,
       items: [
         { label: "Accordion", to: "/feature-accordion" },
@@ -142,8 +101,8 @@ function Header() {
       ],
     },
     {
-      label: "Blogs",
-      to: "/",
+      label: "About-Us",
+      to: "/about-us",
       dropdown: true,
       items: [
         { label: "Blog Card", to: "/blog-card" },
@@ -155,7 +114,7 @@ function Header() {
     {
       label: "Contact",
       dropdown: true,
-      to: "/",
+      to: "/contact-us",
       items: [
         { label: "Contact 1", to: "/contact-us" },
         { label: "Contact 2", to: "/contact-us-2" },
@@ -231,14 +190,15 @@ function Header() {
                   <Collapse className="navbar-collapse" isOpen={!isCollapsed}>
                     <Nav className="navbar-nav mx-auto">
                       {navItems.map((item, index) => (
+
                         <Dropdown
-                          key={item.label}
+                         
                           nav
                           isOpen={dropdownOpen[index]}
                           toggle={() => toggleDropdown(index)}
                         >
-                          <DropdownToggle nav caret onClick={() => handleLinkClick(item.to)}>
-                            {item.label}
+                          <DropdownToggle nav caret>
+                            <Link style={{textDecoration: 'none', color: 'black'}} to={item.to}>{item.label}</Link>
                           </DropdownToggle>
                           
                         </Dropdown>
@@ -311,9 +271,7 @@ function Header() {
             alt=""
           />
           <p className="mb-0 text-white lead">
-            Taypo - Multipurpose Bootstrap5 Template is Most PowerFull template
-            2022 For Everyone, Start working with an company that provide
-            everything you need to generate awareness.
+          At SB ONLINE SERVICES, we transform your digital experience with custom mobile apps, cutting-edge security systems, seamless networking solutions, and more. Join us to elevate your business to new heights with our comprehensive tech services.
           </p>
           <div className="form-info border-top border-dark pt-6 mt-6">
             <h5 className=" text-white border-bottom border-white d-inline-block">
@@ -322,21 +280,21 @@ function Header() {
             <ListGroup className="mt-4 bg-transparent px-0">
               <ListGroupItem className="mb-2 h6 text-light bg-transparent px-0">
                 <i className="text-primary fs-4 align-middle bi bi-geo-alt me-2"></i>
-                423B, Road Wordwide Country, USA
+                Gadarwara, Hospital Road, Narsinghpur-487551, Madhya Pradesh, India.
               </ListGroupItem>
               <ListGroupItem className="mb-2 h6 bg-transparent px-0">
                 <i className="text-primary fs-4 align-middle bi bi-telephone me-2"></i>
-                <a className="text-light" href="tel:+912345678900">
-                  +91-234-567-8900
+                <a className="text-light" href="tel:+919584730838">
+                +91 9584730838
                 </a>
               </ListGroupItem>
               <ListGroupItem className="h6 bg-transparent px-0">
                 <i className="text-primary fs-4 align-middle bi bi-envelope me-2"></i>
                 <a
                   className="text-light"
-                  href="mailto:skytouchinfotech01@gmail.com"
+                  href="mailto:sbonlineservicesgar@gmail.com"
                 >
-                  skytouchinfotech01@gmail.com
+                sbonlineservicesgar@gmail.com
                 </a>
               </ListGroupItem>
             </ListGroup>

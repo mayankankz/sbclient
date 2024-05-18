@@ -48,6 +48,7 @@ import { useEffect, useState } from "react";
 import Editor from "./Pages/adminDashboard/Editor/Editor";
 import DashBoard from "./Pages/adminDashboard/Dashbaord/DashBoard";
 import AdminLayout from "./Pages/adminDashboard/Layout";
+import Portfolio from "./Components/portfolio/Protfolio";
 function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
@@ -115,14 +116,14 @@ function App() {
             </Routes>
           ) : (
             <div className="page-wrapper">
-            {!isAdminRoute ? <Header /> : ""}
+              {(!isAdminRoute && !location.pathname.includes("login")) ? <Header /> : ""}
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/index-2" element={<Index2 />} />
-                
+                <Route path="/" element={<Index2 />} />
+               
+
                 <Route path="/index-3" element={<Index3 />} />
                 <Route path="/about-us-1" element={<About_us_1 />} />
-                <Route path="/about-us-2" element={<About_us_2 />} />
+                <Route path="/about-us" element={<About_us_2 />} />
                 <Route path="/team" element={<Team />} />
                 <Route path="/pricing" element={<PricingPage />} />
                 <Route path="/faq" element={<FaqPage />} />
@@ -137,8 +138,8 @@ function App() {
                 <Route path="/product-checkout" element={<CheckOut />} />
                 <Route path="/order-complete" element={<OrderComplete />} />
                 <Route path="/forgot-password" element={<ForgetPassword />} />
-                <Route path="/portfolio-card" element={<PortFolioCard />} />
-                <Route path="/portfolio-single" element={<PortFolioSingle />} />
+                <Route path="/services" element={<Portfolio />} />
+                <Route path="/service" element={<PortFolioSingle />} />
                 <Route path="/feature-accordion" element={<AccordionPage />} />
                 <Route path="/feature-blog" element={<BlogPage />} />
                 <Route path="/blog-single" element={<BlogSingle />} />
@@ -160,16 +161,17 @@ function App() {
                 <Route path="/privacy-policy" element={<Privacy />} />
 
                 <Route path="/admin/*" element={<AdminLayout />}>
-                <Route index element={<DashBoard />} />
-                <Route path="editor" element={<Editor />} />
+                
+                  <Route index element={<DashBoard />} />
+                  <Route path="editor" element={<Editor />} />
                 </Route>
-
+                <Route path="/login" element={<SignIn />} />
                 {/* <Route path="/:mediaType/:id" element={<Details />} />
         <Route path="/search/:query" element={<SearchResult />} />
         <Route path="/explore/:mediaType" element={<Explore />} />
         <Route path="*" element={<PageNotFound />} /> */}
               </Routes>
-              {!isAdminRoute ? <Footer /> : ""}
+              {(!isAdminRoute && !location.pathname.includes("login")) ? <Footer /> : ""}
               <BackToTop />
             </div>
           )}

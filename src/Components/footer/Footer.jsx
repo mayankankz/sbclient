@@ -31,19 +31,17 @@ function Footer() {
                 <img className="img-fluid" src="images/logo.png" alt="" />
               </Link>
               <p className="my-4">
-                Taypo Multipurpose Bootstrap5 Template Is fully responsible,
-                Build whatever you like with the Taypo, Taypo is the creative
-                Template suitable for Your business.
+              SB ONLINE SERVICES, we transform your digital experience with custom mobile apps, cutting-edge security systems, seamless networking solutions, and more. Join us to elevate your business to new heights with our comprehensive tech services.
               </p>
               <ul className="media-icon list-unstyled">
                 <ListGroupItem className="mb-2">
-                  <Link to="mailto:skytouchinfotech01@gmail.com" className="h6">
-                    skytouchinfotech01@gmail.com
+                  <Link to="mailto:sbonlineservicesgar@gmail.com" className="h6">
+                  sbonlineservicesgar@gmail.com
                   </Link>
                 </ListGroupItem>
                 <ListGroupItem>
-                  <Link to="tel:+912345678900" className="h6">
-                    +91-234-567-8900
+                  <Link to="tel:+919584730838" className="h6">
+                  +91 9584730838
                   </Link>
                 </ListGroupItem>
               </ul>
@@ -53,7 +51,7 @@ function Footer() {
               <h5 className="mb-4">Our Link</h5>
               <Nav className="navbar-nav list-unstyled mb-0">
                 <NavItem className="mb-3">
-                  <Link to="/about-us-1" className="nav-link">
+                  <Link to="/about-us" className="nav-link">
                     About
                   </Link>
                 </NavItem>
@@ -62,11 +60,7 @@ function Footer() {
                     Team
                   </Link>
                 </NavItem>
-                <NavItem className="mb-3">
-                  <Link to="/blog-card" className="nav-link">
-                    Blogs
-                  </Link>
-                </NavItem>
+               
                 <NavItem className="mb-3">
                   <Link to="/contact-us" className="nav-link">
                     Contact Us
@@ -83,11 +77,7 @@ function Footer() {
                     Faq
                   </Link>
                 </NavItem>
-                <NavItem className="mb-3">
-                  <Link to="/product-grid" className="nav-link">
-                    Product Grid
-                  </Link>
-                </NavItem>
+               
                 <NavItem className="mb-3">
                   <Link to="/terms-and-conditions" className="nav-link">
                     Term Of Service
@@ -103,7 +93,7 @@ function Footer() {
             <Col md={8} lg={4} className="mt-6 mt-lg-0">
               <h5 className="mb-4">Our Address</h5>
               <div className="mb-3 text-muted" style={{ fontSize: "16px" }}>
-                423B, Road Wordwide Country, USA{" "}
+              Gadarwara, Hospital Road, Narsinghpur-487551, Madhya Pradesh, India.{" "}
               </div>
 
               <ul horizontal className="list-inline  mb-3">
@@ -121,9 +111,7 @@ function Footer() {
                 ))}
               </ul>
               <div className="subscribe-form">
-                <p className="mb-3 font-w-6 text-primary">
-                  Sign Up For Newsletter
-                </p>
+                
                 <form
                   id="mc-form"
                   className="d-flex align-items-center shadow p-2 rounded bg-white"
@@ -149,11 +137,11 @@ function Footer() {
           </Row>
           <Row className="mt-7">
             <Col className="text-center text-dark">
-              Copyright 2023 Taypo Theme by{" "}
+              Copyright {new Date().getFullYear()} {" "}
               <u>
-                <a href="#">SkyTouch InfoTech </a>
+                <a href="#">SB ONLINE SERVICES</a>
               </u>
-              | All Rights Reserved
+              {"   "}| All Rights Reserved
             </Col>
           </Row>
         </Container>

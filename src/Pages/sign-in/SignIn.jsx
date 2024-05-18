@@ -19,11 +19,7 @@ function SignIn() {
 
   return (
     <div className="page-wrapper">
-      <Page_Heading
-        title="Sign In"
-        firstBreadcrumb={firstBreadcrumb}
-        secondBreadcrumb={secondBreadcrumb}
-      />
+      
       <div className="page-content">
         <section>
           <Container>
@@ -85,7 +81,7 @@ function SignIn() {
             </Row>
           </Container>
         </section>
-        <Contact />
+       
       </div>
     </div>
   );
