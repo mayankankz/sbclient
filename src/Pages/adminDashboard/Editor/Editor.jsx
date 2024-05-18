@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import Draggable from 'react-draggable';
 import { Resizable } from 're-resizable';
-import 'react-resizable/css/styles.css'; // Ensure you have the styles for Resizable
+import 'react-resizable/css/styles.css';
 import { CloseOutlined } from '@mui/icons-material';
 
 const Editor = () => {
   const [elements, setElements] = useState([]);
   const [selectedElementId, setSelectedElementId] = useState(null);
   const [styles, setStyles] = useState({});
+  const [templates, setTemplates] = useState([]);
 
   const addElement = (type) => {
     const newElement = {
@@ -16,7 +17,8 @@ const Editor = () => {
       content: type === 'label' ? 'Label Element' : type === 'input' ? 'Input Element' : type === 'image' ? 'https://via.placeholder.com/150' : '',
       position: { x: 0, y: 0 },
       size: { width: 100, height: 50 },
-      styles: {}
+      styles: {},
+      zIndex: elements.length
     };
     setElements([...elements, newElement]);
   };
@@ -51,24 +53,118 @@ const Editor = () => {
           ...el,
           styles: {
             ...el.styles,
-            [property]: value
+            [property]: property === 'fontSize' || property === 'margin' || property === 'borderRadius' ? `${value}px` : value
           }
         };
       }
       return el;
     });
     setElements(newElements);
-    setStyles(prevStyles => ({ ...prevStyles, [property]: value }));
+    setStyles(prevStyles => ({ ...prevStyles, [property]: property === 'fontSize' || property === 'margin' || property === 'borderRadius' ? `${value}px` : value }));
   };
+
+  const handleContentChange = (content) => {
+    const newElements = elements.map(el => {
+      if (el.id === selectedElementId) {
+        return { ...el, content };
+      }
+      return el;
+    });
+    setElements(newElements);
+  };
+
+  const bringForward = () => {
+    if (selectedElementId !== null) {
+      setElements((prevElements) => {
+        const newElements = [...prevElements];
+        const index = newElements.findIndex(el => el.id === selectedElementId);
+        if (index>=0) {
+          const temp = newElements[index];
+          newElements[index]['zIndex'] = temp['zIndex']+1;
+        }
+        return newElements;
+      });
+    }
+  };
+  
+  const sendBackward = () => {
+    if (selectedElementId !== null) {
+      setElements((prevElements) => {
+        const newElements = [...prevElements];
+        const index = newElements.findIndex(el => el.id === selectedElementId);
+        if (index >= 0) {
+          const temp = newElements[index];
+          newElements[index]['zIndex'] = temp['zIndex'] -1;
+        }
+        return newElements;
+      });
+    }
+  };
+  
 
   const styleOptions = [
     { label: 'Background Color', property: 'backgroundColor', type: 'color' },
     { label: 'Font Size', property: 'fontSize', type: 'number' },
     { label: 'Text Color', property: 'color', type: 'color' },
-    // Add more style options as needed
+    { label: 'Margin', property: 'margin', type: 'number' },
+    { label: 'Border Radius', property: 'borderRadius', type: 'number' }
   ];
 
+  const generateHTMLTemplate = () => {
+    const htmlString = elements.map(el => {
+      const style = Object.entries(el.styles).map(([key, value]) => `${key}: ${value}`).join('; ');
+      const positionStyle = `position: absolute; left: ${el.position.x}px; top: ${el.position.y}px; width: ${el.size.width}px; height: ${el.size.height}px; z-index: ${el.zIndex};`;
+
+      let elementHTML = '';
+      switch (el.type) {
+        case 'label':
+          elementHTML = `<label style="${style}">${el.content}</label>`;
+          break;
+        case 'input':
+          elementHTML = `<input type="text" placeholder="${el.content}" style="${style}" value="${el.content}" />`;
+          break;
+        case 'image':
+          elementHTML = `<img src="${el.content}" alt="img" style="${style}" />`;
+          break;
+        case 'box':
+          elementHTML = `<div style="${style}"></div>`;
+          break;
+        default:
+          elementHTML = '';
+      }
+
+      return `<div style="${positionStyle}">${elementHTML}</div>`;
+    }).join('');
+
+    return htmlString;
+  };
+
+  const exportHTMLTemplate = () => {
+    const htmlTemplate = generateHTMLTemplate();
+    const htmlString = `<!DOCTYPE html><html><head><style>body {position: relative;}</style></head><body>${htmlTemplate}</body></html>`;
+    const blob = new Blob([htmlString], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'template.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const saveTemplate = () => {
+    setTemplates([...templates, { id: templates.length, elements: JSON.parse(JSON.stringify(elements)) }]);
+  };
+
+  const loadTemplate = (templateId) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setElements(JSON.parse(JSON.stringify(template.elements)));
+    }
+  };
+
   return (
+    <>
     <div className="App h-100 w-100 d-flex align-items-center">
       <div className="toolbar d-flex flex-column gap-4">
         <button onClick={() => addElement('label')}>Add Label</button>
@@ -76,6 +172,10 @@ const Editor = () => {
         <button onClick={() => addElement('image')}>Add Image</button>
         <button onClick={() => addElement('box')}>Add Box</button>
         <button onClick={() => setElements([])}>Clear All</button>
+        <button onClick={bringForward}>Bring Forward</button>
+        <button onClick={sendBackward}>Send Backward</button>
+        <button onClick={exportHTMLTemplate}>Export HTML Template</button>
+        <button onClick={saveTemplate}>Save Template</button>
       </div>
       <div style={{ flex: 1 }}>
         <div className="workspace" style={{ scale: '2', width: '350px', height: '200px', position: 'relative', border: '1px solid black', margin: '0 auto' }}>
@@ -85,7 +185,7 @@ const Editor = () => {
               position={el.position}
               onStop={handleDrag(index)}
               bounds="parent"
-              grid={[5, 5]} // Move in 5px increments to reduce sensitivity
+              grid={[5, 5]}
             >
               <Resizable
                 size={{ width: el.size.width, height: el.size.height }}
@@ -94,10 +194,11 @@ const Editor = () => {
                 minHeight={20}
                 maxWidth={300}
                 maxHeight={150}
-                grid={[5, 5]} // Resize in 5px increments to reduce sensitivity
+                grid={[5, 5]}
                 style={{
                   position: 'absolute',
                   border: '1px solid #ddd',
+                  zIndex: el.zIndex,
                   ...el.styles
                 }}
                 onDoubleClick={() => {
@@ -132,15 +233,35 @@ const Editor = () => {
               ) : (
                 <input
                   type="number"
-                  value={styles[option.property] || ''}
+                  value={parseInt(styles[option.property], 10) || ''}
                   onChange={(e) => handleStyleChange(option.property, e.target.value)}
                 />
               )}
             </div>
           ))}
+          {elements.find(el => el.id === selectedElementId)?.type !== 'image' && (
+            <div className="style-option">
+              <label>Content</label>
+              <input
+                type="text"
+                value={elements.find(el => el.id === selectedElementId)?.content || ''}
+                onChange={(e) => handleContentChange(e.target.value)}
+              />
+            </div>
+          )}
         </div>
       )}
+ 
     </div>
+         <div className="template-list" style={{ marginLeft: '20px' }}>
+         <h3>Saved Templates</h3>
+         {templates.map(template => (
+           <div key={template.id} className="template-item">
+             <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
+           </div>
+         ))}
+       </div>
+       </>
   );
 };
 
