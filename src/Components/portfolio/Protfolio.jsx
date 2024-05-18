@@ -79,7 +79,7 @@ debugger
                 <div className="hover-translate position-relative bg-white shadow p-3 rounded-4">
                   <img
                     className="img-fluid w-100 rounded-4"
-                    src={`../assets${item.imgSrc}`}
+                    src={item.imgSrc}
                     alt=""
                   />
                   <div className="portfolio-title d-flex justify-content-between align-items-center mt-3">
