@@ -1,59 +1,49 @@
-.main {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f0f0f0;
-    margin: 0;
-    font-family: Arial, sans-serif;
+.offcanvas-backdrop.show {
+    opacity: 0;
 }
 
-.id-card {
-    width: 3.375in;
-    height: 2.125in;
-    border: 1px solid #000;
-    border-radius: 8px;
-    background-color: #fff;
-    padding: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.toolbar{
+    display: grid;
+    grid-template-columns: 1fr 50%;
+    gap: 10px;
 }
 
-.header {
-    text-align: center;
+
+.button-23 {
+  background-color: #FFFFFF;
+  border: 1px solid #222222;
+  border-radius: 8px;
+  box-sizing: border-box;
+  color: #222222;
+  cursor: pointer;
+  display: inline-block;
+  font-family: Circular,-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  margin: 0;
+  outline: none;
+  padding: 13px 23px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  touch-action: manipulation;
+  transition: box-shadow .2s,-ms-transform .1s,-webkit-transform .1s,transform .1s;
+  user-select: none;
+  -webkit-user-select: none;
+  width: auto;
 }
 
-.logo {
-    width: 50px;
-    height: 50px;
+.button-23:focus-visible {
+  box-shadow: #222222 0 0 0 2px, rgba(255, 255, 255, 0.8) 0 0 0 4px;
+  transition: box-shadow .2s;
+  background-color: #EB3E35;
 }
+.button-23:hover {
+    background-color: #EB3E35;
+    border-color: #000000;
+    transform: scale(.96);
+  }
 
-.school-name {
-    font-size: 18px;
-    margin: 5px 0;
-}
 
-.photo-section {
-    text-align: center;
-    margin: 10px 0;
-}
 
-.student-photo {
-    width: 80px;
-    height: 100px;
-    border: 1px solid #000;
-}
-
-.info-section {
-    font-size: 14px;
-    margin: 10px 0;
-}
-
-.footer {
-    text-align: center;
-    margin-top: 10px;
-}
-
-.signature {
-    font-size: 12px;
-    font-style: italic;
-}
