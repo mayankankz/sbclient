@@ -3,7 +3,7 @@ import Draggable from 'react-draggable';
 import { Resizable } from 're-resizable';
 import 'react-resizable/css/styles.css';
 import { CloseOutlined } from '@mui/icons-material';
-import { Button, ButtonGroup, Offcanvas, OffcanvasBody, OffcanvasHeader } from 'reactstrap';
+import { Button, ButtonGroup, Modal, ModalBody, ModalHeader, Offcanvas, OffcanvasBody, OffcanvasHeader } from 'reactstrap';
 import './editor.css';
 
 const Editor = () => {
@@ -14,7 +14,9 @@ const Editor = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [layout, setLayout] = useState('Horizontal');
   const [workspaceDimensions, setWorkspaceDimensions] = useState({ width: 350, height: 200 });
+  const [backgroundImage, setBackgroundImage] = useState(null);
   const offcanvasRef = useRef(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const toggleOff = () => {
     setIsOpen(!isOpen);
@@ -22,9 +24,9 @@ const Editor = () => {
 
   useEffect(() => {
     if (layout === 'Horizontal') {
-      setWorkspaceDimensions({ width: 350, height: 200 });
+      setWorkspaceDimensions({ width: 86, height: 54 });
     } else {
-      setWorkspaceDimensions({ width: 200, height: 350 });
+      setWorkspaceDimensions({ width: 54, height: 86 });
     }
   }, [layout]);
 
@@ -192,6 +194,20 @@ const Editor = () => {
     }
   };
 
+  const handleBackgroundImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setBackgroundImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const togglePreview = () => {
+    setIsPreviewOpen(!isPreviewOpen);
+  };
   return (
     <>
       <div className="App h-100 w-100 d-flex align-items-center">
@@ -200,11 +216,10 @@ const Editor = () => {
           <div className="layout mb-5">
             <label htmlFor="">Select Layout</label>
             <ButtonGroup>
-              <Button active={layout == 'Horizontal' ? true : false} outline onClick={() => setLayout('Horizontal')}>
+              <Button active={layout === 'Horizontal'} outline onClick={() => setLayout('Horizontal')}>
                 Horizontal
               </Button>
-
-              <Button  active={layout == 'Vertical' ? true : false} outline onClick={() => setLayout('Vertical')}>
+              <Button active={layout === 'Vertical'} outline onClick={() => setLayout('Vertical')}>
                 Vertical
               </Button>
             </ButtonGroup>
@@ -217,13 +232,37 @@ const Editor = () => {
             <button className='button-23' onClick={() => setElements([])}>Clear All</button>
             <button className='button-23' onClick={bringForward}>Bring Forward</button>
             <button className='button-23' onClick={sendBackward}>Send Backward</button>
-            {/*<button className='button-23' onClick={exportHTMLTemplate}>Export HTML Template</button> */}
             <button className='button-23' onClick={saveTemplate}>Save Template</button>
+            <button className='button-23' onClick={togglePreview}>Preview</button>
           </div>
 
+          <div className="background-uploader">
+            {backgroundImage ? (
+              <div>
+                <img src={backgroundImage} alt="Background" style={{ width: '100px', height: '100px', marginRight: '10px' }} />
+                <button className='button-23' onClick={() => setBackgroundImage(null)}>Remove Background</button>
+              </div>
+            ) : (
+              <input type="file" accept="image/*" onChange={handleBackgroundImageChange} />
+            )}
+          </div>
         </div>
+
         <div style={{ width: '80%', transition: 'margin-right 0.3s ease', marginRight: isOpen ? '20%' : '0' }}>
-          <div className="workspace" style={{ scale: '2', width: `${workspaceDimensions.width}px`, height: `${workspaceDimensions.height}px`, position: 'relative', border: '1px solid black', margin: '0 auto' }}>
+          <div
+            className="workspace"
+            style={{
+              scale: '2',
+              width: `${workspaceDimensions.width}mm`,
+              height: `${workspaceDimensions.height}mm`,
+              position: 'relative',
+              border: '1px solid black',
+              margin: '0 auto',
+              backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
             {elements.map((el, index) => (
               <Draggable
                 key={el.id}
@@ -305,6 +344,54 @@ const Editor = () => {
           </Offcanvas>
         )}
       </div>
+
+      <Modal isOpen={isPreviewOpen} toggle={togglePreview} size="lg">
+      <ModalHeader toggle={togglePreview}>ID Card Preview</ModalHeader>
+      <ModalBody>
+        <div
+          className="workspace"
+          style={{
+            width: `${workspaceDimensions.width}mm`,
+            height: `${workspaceDimensions.height}mm`,
+            position: 'relative',
+            border: '1px solid black',
+            margin: '0 auto',
+            backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {elements.map((el, index) => (
+            <div
+              key={el.id}
+              style={{
+                position: 'absolute',
+                left: `${el.position.x}px`,
+                top: `${el.position.y}px`,
+                width: `${el.size.width}px`,
+                height: `${el.size.height}px`,
+                zIndex: el.zIndex,
+                ...el.styles,
+              }}
+            >
+              {el.type === 'label' && <label style={{ ...el.styles }}>{el.content}</label>}
+              {el.type === 'input' && <input type="text" placeholder={el.content} style={{ ...el.styles, width: '100%', height: '100%' }} />}
+              {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
+              {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
+            </div>
+          ))}
+        </div>
+      </ModalBody>
+    </Modal>
+
+      <div className="template-list" style={{ marginLeft: '20px' }}>
+         <h3>Saved Templates</h3>
+         {templates.map(template => (
+           <div key={template.id} className="template-item">
+             <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
+           </div>
+         ))}
+       </div>
     </>
   );
 };
