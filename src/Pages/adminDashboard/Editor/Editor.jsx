@@ -18,6 +18,8 @@ const Editor = () => {
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
+  const availableFields = ['student_name', 'class', 'address'];
+
   const toggleOff = () => {
     setIsOpen(!isOpen);
   };
@@ -38,7 +40,8 @@ const Editor = () => {
       position: { x: 0, y: 0 },
       size: { width: 100, height: 50 },
       styles: {},
-      zIndex: elements.length
+      zIndex: elements.length,
+      fieldMapping: ''
     };
     setElements([...elements, newElement]);
   };
@@ -105,6 +108,16 @@ const Editor = () => {
     setElements(newElements);
   };
 
+  const handleFieldMappingChange = (fieldMapping) => {
+    const newElements = elements.map(el => {
+      if (el.id === selectedElementId) {
+        return { ...el, fieldMapping };
+      }
+      return el;
+    });
+    setElements(newElements);
+  };
+
   const bringForward = () => {
     if (selectedElementId !== null) {
       setElements((prevElements) => {
@@ -149,10 +162,10 @@ const Editor = () => {
       let elementHTML = '';
       switch (el.type) {
         case 'label':
-          elementHTML = `<label style="${style}">${el.content}</label>`;
+          elementHTML = `<label style="${style}">${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>`;
           break;
         case 'input':
-          elementHTML = `<input type="text" placeholder="${el.content}" style="${style}" value="${el.content}" />`;
+          elementHTML = `<input type="text" placeholder="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" style="${style}" value="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" />`;
           break;
         case 'image':
           elementHTML = `<img src="${el.content}" alt="img" style="${style}" />`;
@@ -170,20 +183,26 @@ const Editor = () => {
     return htmlString;
   };
 
-  const exportHTMLTemplate = () => {
-    const htmlTemplate = generateHTMLTemplate();
-    const htmlString = `<!DOCTYPE html><html><head><style>body {position: relative;}</style></head><body>${htmlTemplate}</body></html>`;
-    const blob = new Blob([htmlString], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'template.html';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // const exportHTMLTemplate = () => {
+  //   const htmlTemplate = generateHTMLTemplate();
+  //   const htmlString = `<!DOCTYPE html><html><head><style>body {position: relative;}</style></head><body>${htmlTemplate}</body></html>`;
+  //   const blob = new Blob([htmlString], { type: 'text/html' });
+  //   const url = URL.createObjectURL(blob);
+  //   const link = document.createElement('a');
+  //   link.href = url;
+  //   link.download = 'template.html';
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
 
   const saveTemplate = () => {
+    const templateData = {
+      elements: elements.map(el => ({ ...el })),
+      layout,
+      backgroundImage
+    };
+    console.log(templateData)
     setTemplates([...templates, { id: templates.length, elements: JSON.parse(JSON.stringify(elements)) }]);
   };
 
@@ -208,10 +227,10 @@ const Editor = () => {
   const togglePreview = () => {
     setIsPreviewOpen(!isPreviewOpen);
   };
+
   return (
     <>
       <div className="App h-100 w-100 d-flex align-items-center">
-
         <div className="main mb-5">
           <div className="layout mb-5">
             <label htmlFor="">Select Layout</label>
@@ -235,7 +254,6 @@ const Editor = () => {
             <button className='button-23' onClick={saveTemplate}>Save Template</button>
             <button className='button-23' onClick={togglePreview}>Preview</button>
           </div>
-
           <div className="background-uploader">
             {backgroundImage ? (
               <div>
@@ -339,6 +357,18 @@ const Editor = () => {
                     />
                   </div>
                 )}
+                <div className="style-option">
+                  <label>Field Mapping</label>
+                  <select
+                    value={elements.find(el => el.id === selectedElementId)?.fieldMapping || ''}
+                    onChange={(e) => handleFieldMappingChange(e.target.value)}
+                  >
+                    <option value="">None</option>
+                    {availableFields.map(field => (
+                      <option key={field} value={field}>{field}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </OffcanvasBody>
           </Offcanvas>
@@ -346,52 +376,52 @@ const Editor = () => {
       </div>
 
       <Modal isOpen={isPreviewOpen} toggle={togglePreview} size="lg">
-      <ModalHeader toggle={togglePreview}>ID Card Preview</ModalHeader>
-      <ModalBody>
-        <div
-          className="workspace"
-          style={{
-            width: `${workspaceDimensions.width}mm`,
-            height: `${workspaceDimensions.height}mm`,
-            position: 'relative',
-            border: '1px solid black',
-            margin: '0 auto',
-            backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {elements.map((el, index) => (
-            <div
-              key={el.id}
-              style={{
-                position: 'absolute',
-                left: `${el.position.x}px`,
-                top: `${el.position.y}px`,
-                width: `${el.size.width}px`,
-                height: `${el.size.height}px`,
-                zIndex: el.zIndex,
-                ...el.styles,
-              }}
-            >
-              {el.type === 'label' && <label style={{ ...el.styles }}>{el.content}</label>}
-              {el.type === 'input' && <input type="text" placeholder={el.content} style={{ ...el.styles, width: '100%', height: '100%' }} />}
-              {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
-              {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
-            </div>
-          ))}
-        </div>
-      </ModalBody>
-    </Modal>
+        <ModalHeader toggle={togglePreview}>ID Card Preview</ModalHeader>
+        <ModalBody>
+          <div
+            className="workspace"
+            style={{
+              width: `${workspaceDimensions.width}mm`,
+              height: `${workspaceDimensions.height}mm`,
+              position: 'relative',
+              border: '1px solid black',
+              margin: '0 auto',
+              backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          >
+            {elements.map((el, index) => (
+              <div
+                key={el.id}
+                style={{
+                  position: 'absolute',
+                  left: `${el.position.x}px`,
+                  top: `${el.position.y}px`,
+                  width: `${el.size.width}px`,
+                  height: `${el.size.height}px`,
+                  zIndex: el.zIndex,
+                  ...el.styles,
+                }}
+              >
+                {el.type === 'label' && <label style={{ ...el.styles }}>{el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>}
+                {el.type === 'input' && <input type="text" placeholder={el.fieldMapping ? `{${el.fieldMapping}}` : el.content} style={{ ...el.styles, width: '100%', height: '100%' }} />}
+                {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
+                {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
+              </div>
+            ))}
+          </div>
+        </ModalBody>
+      </Modal>
 
       <div className="template-list" style={{ marginLeft: '20px' }}>
-         <h3>Saved Templates</h3>
-         {templates.map(template => (
-           <div key={template.id} className="template-item">
-             <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
-           </div>
-         ))}
-       </div>
+        <h3>Saved Templates</h3>
+        {templates.map(template => (
+          <div key={template.id} className="template-item">
+            <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
+          </div>
+        ))}
+      </div>
     </>
   );
 };
