@@ -6,6 +6,8 @@ import { CloseOutlined, DragIndicator } from '@mui/icons-material';
 import { Button, ButtonGroup, Modal, ModalBody, ModalHeader, Offcanvas, OffcanvasBody, OffcanvasHeader } from 'reactstrap';
 import './editor.css';
 import { TfiHandDrag } from "react-icons/tfi";
+import { addTemplate, getAllTemplate } from '../../../service/idcard';
+
 const Editor = () => {
   const [elements, setElements] = useState([]);
   const [selectedElementId, setSelectedElementId] = useState(null);
@@ -18,7 +20,7 @@ const Editor = () => {
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const availableFields = ['student_name', 'class', 'address'];
+  const availableFields = ['studentname', 'fathersname', 'mothersname','class','address','mobilenumber','schoolname','session','studentidno','aadhar','dob','section','housename'];
 
   const toggleOff = () => {
     setIsOpen(!isOpen);
@@ -154,34 +156,34 @@ const Editor = () => {
     { label: 'Border Radius', property: 'borderRadius', type: 'number' }
   ];
 
-  const generateHTMLTemplate = () => {
-    const htmlString = elements.map(el => {
-      const style = Object.entries(el.styles).map(([key, value]) => `${key}: ${value}`).join('; ');
-      const positionStyle = `position: absolute; left: ${el.position.x}px; top: ${el.position.y}px; width: ${el.size.width}px; height: ${el.size.height}px; z-index: ${el.zIndex};`;
+  // const generateHTMLTemplate = () => {
+  //   const htmlString = elements.map(el => {
+  //     const style = Object.entries(el.styles).map(([key, value]) => `${key}: ${value}`).join('; ');
+  //     const positionStyle = `position: absolute; left: ${el.position.x}px; top: ${el.position.y}px; width: ${el.size.width}px; height: ${el.size.height}px; z-index: ${el.zIndex};`;
 
-      let elementHTML = '';
-      switch (el.type) {
-        case 'label':
-          elementHTML = `<label style="${style}">${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>`;
-          break;
-        case 'input':
-          elementHTML = `<input type="text" placeholder="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" style="${style}" value="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" />`;
-          break;
-        case 'image':
-          elementHTML = `<img src="${el.content}" alt="img" style="${style}" />`;
-          break;
-        case 'box':
-          elementHTML = `<div style="${style}"></div>`;
-          break;
-        default:
-          elementHTML = '';
-      }
+  //     let elementHTML = '';
+  //     switch (el.type) {
+  //       case 'label':
+  //         elementHTML = `<label style="${style}">${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>`;
+  //         break;
+  //       case 'input':
+  //         elementHTML = `<input type="text" placeholder="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" style="${style}" value="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" />`;
+  //         break;
+  //       case 'image':
+  //         elementHTML = `<img src="${el.content}" alt="img" style="${style}" />`;
+  //         break;
+  //       case 'box':
+  //         elementHTML = `<div style="${style}"></div>`;
+  //         break;
+  //       default:
+  //         elementHTML = '';
+  //     }
 
-      return `<div style="${positionStyle}">${elementHTML}</div>`;
-    }).join('');
+  //     return `<div style="${positionStyle}">${elementHTML}</div>`;
+  //   }).join('');
 
-    return htmlString;
-  };
+  //   return htmlString;
+  // };
 
   // const exportHTMLTemplate = () => {
   //   const htmlTemplate = generateHTMLTemplate();
@@ -196,20 +198,39 @@ const Editor = () => {
   //   document.body.removeChild(link);
   // };
 
-  const saveTemplate = () => {
+  const saveTemplate = async() => {
     const templateData = {
       elements: elements.map(el => ({ ...el })),
       layout,
       backgroundImage
     };
-    console.log(templateData)
-    setTemplates([...templates, { id: templates.length, elements: JSON.parse(JSON.stringify(elements)) }]);
+
+    try {
+
+      const response = await  addTemplate(templateData);
+      alert("template saved successfully")
+      console.log(response)
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await getAllTemplate()
+      const data = await response
+      setTemplates(data)
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const loadTemplate = (templateId) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      setElements(JSON.parse(JSON.stringify(template.elements)));
+      setElements(template.elements);
+      setLayout(template.layout);
+      setBackgroundImage(template.backgroundImage);
     }
   };
 
@@ -227,6 +248,9 @@ const Editor = () => {
   const togglePreview = () => {
     setIsPreviewOpen(!isPreviewOpen);
   };
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
 
   return (
     <>
@@ -421,10 +445,10 @@ const Editor = () => {
       <div className="template-list" style={{ marginLeft: '20px' }}>
         <h3>Saved Templates</h3>
         {templates.map(template => (
-          <div key={template.id} className="template-item">
-            <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
-          </div>
-        ))}
+        <div key={template.id} className="template-item">
+          <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
+        </div>
+      ))}
       </div>
     </>
   );
