@@ -5,7 +5,7 @@ const ResizeHandle = () => {
     <div>
       <Brightness1OutlinedIcon
         sx={{
-          fontSize: 8,
+          fontSize: 6,
           margin: 0.5,
           borderColor: 'red',
           borderWidth: 1,

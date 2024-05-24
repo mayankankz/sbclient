@@ -10,6 +10,8 @@ import ResizeHandle from '../../../Components/ResizeHandle';
 import { useReactToPrint } from 'react-to-print';
 import ContextMenu from '../../../Components/ContexctMenu';
 import GuideLines from '../../../Components/GuildeLines/GuildLines';
+import uniqid from 'uniqid';
+
 const Editor = () => {
   const [elements, setElements] = useState([]);
   const [selectedElementId, setSelectedElementId] = useState(null);
@@ -116,7 +118,7 @@ const Editor = () => {
 
   const addElement = (type) => {
     const newElement = {
-      id: elements.length,
+      id: uniqid(),
       type,
       content: type === 'label' ? 'Label Element' : type === 'input' ? 'Input Element' : type === 'image' ? 'https://via.placeholder.com/150' : '',
       position: { x: 0, y: 0 },
@@ -133,9 +135,9 @@ const Editor = () => {
     if (elementToDuplicate) {
       const newElement = {
         ...elementToDuplicate,
-        id: elements.length, // Generate new id
+        id: uniqid(), // Generate new id
         position: { x: elementToDuplicate.position.x + 10, y: elementToDuplicate.position.y + 10 }, // Offset position
-        zIndex: elements.length, // Update zIndex
+        zIndex: elements.length,
       };
       setElements([...elements, newElement]);
     }
@@ -152,67 +154,82 @@ const Editor = () => {
   const handleDrag = (index) => (e, { x, y }) => {
     const newElements = [...elements];
     const draggedElement = { ...newElements[index], position: { x, y } };
-    const snapPosition = calculateGuideLines(draggedElement);
+    const snapPosition = calculateGuideLines(draggedElement, 'drag');
 
-    // Apply magnetic snapping
-    newElements[index].position = snapPosition;
+    newElements[index].position = snapPosition.position;
+    setGuideLines(snapPosition.lines);
     setElements(newElements);
   };
 
-  const handleDragStop = () => {
+  const handleStop = () => {
     setGuideLines([]);
   };
 
 
+
   const MAGNETIC_THRESHOLD = 5;
 
-  const calculateGuideLines = (draggedElement) => {
+  const calculateGuideLines = (element, type) => {
     const lines = [];
-    let snapPosition = { x: draggedElement.position.x, y: draggedElement.position.y };
+    let snapPosition = { x: element.position.x, y: element.position.y };
+    let snapSize = { width: element.size.width, height: element.size.height };
 
     elements.forEach(el => {
-      if (el.id !== draggedElement.id) {
-
-        if (Math.abs(el.position.x - draggedElement.position.x) < MAGNETIC_THRESHOLD) {
-          lines.push({ type: 'vertical', position: el.position.x, isVisible: true });
-          snapPosition.x = el.position.x;
-        } else if (Math.abs((el.position.x + el.size.width) - (draggedElement.position.x + draggedElement.size.width)) < MAGNETIC_THRESHOLD) {
-          lines.push({ type: 'vertical', position: el.position.x + el.size.width, isVisible: true });
-          snapPosition.x = el.position.x + el.size.width - draggedElement.size.width;
-        }
-
-
-        if (Math.abs(el.position.y - draggedElement.position.y) < MAGNETIC_THRESHOLD) {
-          lines.push({ type: 'horizontal', position: el.position.y, isVisible: true });
-          snapPosition.y = el.position.y;
-        } else if (Math.abs((el.position.y + el.size.height) - (draggedElement.position.y + draggedElement.size.height)) < MAGNETIC_THRESHOLD) {
-          lines.push({ type: 'horizontal', position: el.position.y + el.size.height, isVisible: true });
-          snapPosition.y = el.position.y + el.size.height - draggedElement.size.height;
+      if (el.id !== element.id) {
+        if (type === 'drag') {
+          if (Math.abs(el.position.y - element.position.y) < MAGNETIC_THRESHOLD) {
+            lines.push({ type: 'horizontal', position: el.position.y, start: Math.min(el.position.x, element.position.x), end: Math.max(el.position.x + el.size.width, element.position.x + element.size.width) });
+            snapPosition.y = el.position.y;
+          }
+          if (Math.abs((el.position.y + el.size.height) - (element.position.y + element.size.height)) < MAGNETIC_THRESHOLD) {
+            lines.push({ type: 'horizontal', position: el.position.y + el.size.height, start: Math.min(el.position.x, element.position.x), end: Math.max(el.position.x + el.size.width, element.position.x + element.size.width) });
+            snapPosition.y = el.position.y + el.size.height - element.size.height;
+          }
+          if (Math.abs(el.position.x - element.position.x) < MAGNETIC_THRESHOLD) {
+            lines.push({ type: 'vertical', position: el.position.x, start: Math.min(el.position.y, element.position.y), end: Math.max(el.position.y + el.size.height, element.position.y + element.size.height) });
+            snapPosition.x = el.position.x;
+          }
+          if (Math.abs((el.position.x + el.size.width) - (element.position.x + element.size.width)) < MAGNETIC_THRESHOLD) {
+            lines.push({ type: 'vertical', position: el.position.x + el.size.width, start: Math.min(el.position.y, element.position.y), end: Math.max(el.position.y + el.size.height, element.position.y + element.size.height) });
+            snapPosition.x = el.position.x + el.size.width - element.size.width;
+          }
+        } else if (type === 'resize') {
+          if (Math.abs(el.size.height - element.size.height) < MAGNETIC_THRESHOLD) {
+            lines.push({ type: 'horizontal', position: element.position.y + element.size.height, start: Math.min(el.position.x, element.position.x), end: Math.max(el.position.x + el.size.width, element.position.x + element.size.width) });
+            snapSize.height = el.size.height;
+          }
+          if (Math.abs(el.size.width - element.size.width) < MAGNETIC_THRESHOLD) {
+            lines.push({ type: 'vertical', position: element.position.x + element.size.width, start: Math.min(el.position.y, element.position.y), end: Math.max(el.position.y + el.size.height, element.position.y + element.size.height) });
+            snapSize.width = el.size.width;
+          }
         }
       }
     });
 
-    setGuideLines(lines);
-
-    return snapPosition;
+    if (type === 'drag') {
+      return { position: snapPosition, lines };
+    } else if (type === 'resize') {
+      return { size: snapSize, lines };
+    }
   };
 
+  const handleResizeStop = () => {
+    setGuideLines([]);
+  };
 
-  const handleResize = (index) => (e, direction, ref, delta) => {
-    debugger
+  const handleResize = (index) => (e, direction, ref, d) => {
     const newElements = [...elements];
-    const element = newElements[index];
-
-    const newSize = {
-      width: element.size.width + delta.width,
-      height: element.size.height + delta.height
+    const resizedElement = {
+      ...newElements[index],
+      size: {
+        width: newElements[index].size.width + d.width,
+        height: newElements[index].size.height + d.height
+      }
     };
+    const snapSize = calculateGuideLines(resizedElement, 'resize');
 
-    newElements[index] = {
-      ...element,
-      size: newSize
-    };
-
+    newElements[index].size = snapSize.size;
+    setGuideLines(snapSize.lines);
     setElements(newElements);
   };
 
@@ -299,7 +316,7 @@ const Editor = () => {
       backgroundImage
     };
     console.log(templateData)
-    setTemplates([...templates, { id: templates.length, elements: JSON.parse(JSON.stringify(elements)) }]);
+    setTemplates([...templates, { id: uniqid(), elements: JSON.parse(JSON.stringify(elements)) }]);
   };
 
   const loadTemplate = (templateId) => {
@@ -383,8 +400,9 @@ const Editor = () => {
               <Draggable
                 key={el.id}
                 position={el.position}
-                onStart={handleDragStop}
-                onStop={handleDrag(index)}
+                onStop={handleStop}
+                onDrag={handleDrag(index)}
+
                 bounds="parent"
                 grid={[1, 1]}
                 handle='.drag-handle'
@@ -398,6 +416,7 @@ const Editor = () => {
                     setFlag(false);
                   }}
                   size={{ width: el.size.width, height: el.size.height }}
+                  onResizeStart={handleStop}
                   onResizeStop={handleResize(index)}
                   minWidth={50}
                   minHeight={20}
@@ -410,47 +429,44 @@ const Editor = () => {
                     ...el.styles
                   }}
                   handleStyles={{
-                    top: flag
-                      ? {
-                        marginTop: -3,
-                        marginLeft: -5,
-                        top: 0,
-                        left: "50%",
-                        cursor: "ns-resize",
-                        border: "3px solid #999",
-                        borderLeft: "none",
-                        borderRight: "none",
-                        borderBottom: "none",
-                        borderWidth: 3,
-                        borderColor: "#4d4d4d",
-                        width: 10,
-                        height: 10,
-                        boxSizing: "border-box",
-                        zIndex: 1
-                      }
-                      : "",
-                    left: flag
-                      ? {
-                        marginTop: -5,
-                        marginLeft: -3,
-                        top: "50%",
-                        left: 0,
-                        cursor: "ew-resize",
-                        border: "3px solid #999",
-                        borderTop: "none",
-                        borderRight: "none",
-                        borderBottom: "none",
-                        borderWidth: 3,
-                        borderColor: "#4d4d4d",
-                        width: 10,
-                        height: 10,
-                        boxSizing: "border-box",
-                        zIndex: 1
-                      }
-                      : "",
-                    bottom: flag && {
-                      marginTop: -7,
-                      marginLeft: -5,
+                    top: {
+                      marginTop: -1,
+                      marginLeft: -9,
+                      top: 0,
+                      left: "50%",
+                      cursor: "ns-resize",
+                      border: "3px solid #999",
+                      borderLeft: "none",
+                      borderRight: "none",
+                      borderBottom: "none",
+                      borderWidth: 1,
+                      borderColor: "#4d4d4d",
+                      width: 10,
+                      height: 10,
+                      boxSizing: "border-box",
+                      zIndex: 1
+                    },
+                    left: {
+                      marginTop: -4,
+                      marginLeft: -1,
+                      top: "50%",
+                      left: 0,
+                      cursor: "ew-resize",
+                      border: "3px solid #999",
+                      borderTop: "none",
+                      borderRight: "none",
+                      borderBottom: "none",
+                      borderWidth: 1,
+                      borderColor: "#4d4d4d",
+                      width: 10,
+                      height: 10,
+                      boxSizing: "border-box",
+                      zIndex: 1
+                    }
+                    ,
+                    bottom: {
+                      marginTop: -9,
+                      marginLeft: -9,
                       top: "100%",
                       left: "50%",
                       cursor: "ns-resize",
@@ -458,39 +474,49 @@ const Editor = () => {
                       borderLeft: "none",
                       borderRight: "none",
                       borderTop: "none",
-                      borderWidth: 3,
+                      borderWidth: 1,
                       borderColor: "#4d4d4d",
                       width: 10,
                       height: 10,
                       boxSizing: "border-box",
                       zIndex: 1
                     },
-                    right: flag
-                      ? {
-                        marginTop: -5,
-                        marginLeft: -7,
-                        top: "50%",
-                        left: "100%",
-                        cursor: "ew-resize",
-                        border: "3px solid #999",
-                        borderTop: "none",
-                        borderLeft: "none",
-                        borderBottom: "none",
-                        borderWidth: 3,
-                        borderColor: "#4d4d4d",
-                        width: 10,
-                        height: 10,
-                        boxSizing: "border-box",
-                        zIndex: 1
-                      }
-                      : ""
+                    right: {
+                      marginTop: -4,
+                      marginLeft: -9,
+                      top: "50%",
+                      left: "100%",
+                      cursor: "ew-resize",
+                      border: "3px solid #999",
+                      borderTop: "none",
+                      borderLeft: "none",
+                      borderBottom: "none",
+                      borderWidth: 1,
+                      borderColor: "#4d4d4d",
+                      width: 10,
+                      height: 10,
+                      boxSizing: "border-box",
+                      zIndex: 1
+                    }
+
                   }}
                   handleComponent={{
-                    topRight: flag ? <ResizeHandle /> : "",
-                    topLeft: flag ? <ResizeHandle /> : "",
-                    bottomLeft: flag ? <ResizeHandle /> : "",
-                    bottomRight: flag ? <ResizeHandle /> : ""
+                    topLeft: <ResizeHandle />,
+                    topRight: <ResizeHandle />,
+                    bottomLeft: <ResizeHandle />,
+                    bottomRight: <ResizeHandle />,
                   }}
+                  enable={{
+                    top: el.id === selectedElementId,
+                    right: el.id === selectedElementId,
+                    bottom: el.id === selectedElementId,
+                    left: el.id === selectedElementId,
+                    topRight: el.id === selectedElementId,
+                    bottomRight: el.id === selectedElementId,
+                    bottomLeft: el.id === selectedElementId,
+                    topLeft: el.id === selectedElementId
+                  }}
+
 
                   onDoubleClick={() => {
                     setSelectedElementId(el.id);
@@ -499,10 +525,11 @@ const Editor = () => {
                   }}
                   onContextMenu={(e) => handleRightClick(e, el.id)}
                 >
-                  <div className={`element ${el.type}`} style={{ width: '100%', height: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    <div className="drag-handle" style={{ cursor: 'move', position: 'absolute', bottom: '-20px', right: '50%' }}>
-                      <TfiHandDrag />
-                    </div>
+
+                  <div onClick={() => setSelectedElementId(el.id)} className={`element ${el.type}`} style={{ width: '100%', height: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    {el.id == selectedElementId && <div className="drag-handle" style={{ cursor: 'move', position: 'absolute', bottom: '-20px', right: '50%' }}>
+                      <TfiHandDrag style={{ zIndex: 999 }} />
+                    </div>}
                     {el.type === 'label' && <span style={{ ...el.style }}>{el.content}</span>}
                     {el.type === 'input' && <span style={{ ...el.styles, width: '100%', height: '100%' }}>{el.content}</span>}
                     {el.type === 'image' && <img src={el.content} alt="img" style={{ ...el.styles, width: '100%', height: '100%' }} />}
@@ -563,7 +590,7 @@ const Editor = () => {
                     ))}
                   </select>
                 </div>
-                
+
               </div>
             </OffcanvasBody>
           </Offcanvas>
