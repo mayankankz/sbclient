@@ -3,9 +3,13 @@ import Draggable from 'react-draggable';
 import { Resizable } from 're-resizable';
 import 'react-resizable/css/styles.css';
 import { CloseOutlined, DragIndicator } from '@mui/icons-material';
-import { Button, ButtonGroup, Modal, ModalBody, ModalHeader, Offcanvas, OffcanvasBody, OffcanvasHeader } from 'reactstrap';
+import { Button, ButtonGroup, Label, Modal, ModalBody, ModalHeader, Offcanvas, OffcanvasBody, OffcanvasHeader } from 'reactstrap';
 import './editor.css';
 import { TfiHandDrag } from "react-icons/tfi";
+import ResizeHandle from '../../../Components/ResizeHandle';
+import { useReactToPrint } from 'react-to-print';
+import ContextMenu from '../../../Components/ContexctMenu';
+import GuideLines from '../../../Components/GuildeLines/GuildLines';
 const Editor = () => {
   const [elements, setElements] = useState([]);
   const [selectedElementId, setSelectedElementId] = useState(null);
@@ -17,12 +21,90 @@ const Editor = () => {
   const [backgroundImage, setBackgroundImage] = useState(null);
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
+  const [flag, setFlag] = useState(true)
   const availableFields = ['student_name', 'class', 'address'];
+  const contentToPrint = useRef(null);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, elementId: null });
+  const [guideLines, setGuideLines] = useState([]);
 
+  const handlePrint = useReactToPrint({
+    documentTitle: "Print This Document",
+    onBeforePrint: () => console.log("before printing..."),
+    onAfterPrint: () => console.log("after printing..."),
+    removeAfterPrint: true,
+  });
   const toggleOff = () => {
     setIsOpen(!isOpen);
   };
+
+  const handleRightClick = (event, elementId) => {
+    event.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      elementId
+    });
+  };
+
+  const handleContextMenuAction = (action) => {
+    if (contextMenu.elementId !== null) {
+      switch (action) {
+        case 'delete':
+          removeElement(contextMenu.elementId);
+          break;
+        case 'bringForward':
+          setElements((prevElements) => {
+            const newElements = [...prevElements];
+            const index = newElements.findIndex(el => el.id === contextMenu.elementId);
+            if (index >= 0) {
+              newElements[index]['zIndex'] += 1;
+            }
+            return newElements;
+          });
+          break;
+        case 'sendBackward':
+          setElements((prevElements) => {
+            const newElements = [...prevElements];
+            const index = newElements.findIndex(el => el.id === contextMenu.elementId);
+            if (index >= 0) {
+              newElements[index]['zIndex'] -= 1;
+            }
+            return newElements;
+          });
+          break;
+        case 'duplicate':
+          duplicateElement(contextMenu.elementId);
+          break;
+        case 'settings':
+          const elem = [...elements];
+          const index = elem.findIndex(el => el.id === contextMenu.elementId);
+          if (index >= 0) {
+            setSelectedElementId(contextMenu.elementId)
+            toggleOff();
+            setStyles(elem[index]['styles']);
+          }
+
+          break;
+        default:
+          break;
+      }
+    }
+    setContextMenu({ visible: false, x: 0, y: 0, elementId: null });
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (contextMenu.visible && !event.target.closest('.context-menu')) {
+        setContextMenu({ visible: false, x: 0, y: 0, elementId: null });
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [contextMenu]);
 
   useEffect(() => {
     if (layout === 'Horizontal') {
@@ -38,12 +120,25 @@ const Editor = () => {
       type,
       content: type === 'label' ? 'Label Element' : type === 'input' ? 'Input Element' : type === 'image' ? 'https://via.placeholder.com/150' : '',
       position: { x: 0, y: 0 },
-      size: { width: 100, height: 50 },
+      size: { width: 100, height: 10 },
       styles: {},
       zIndex: elements.length,
       fieldMapping: ''
     };
     setElements([...elements, newElement]);
+  };
+
+  const duplicateElement = (id) => {
+    const elementToDuplicate = elements.find(el => el.id === id);
+    if (elementToDuplicate) {
+      const newElement = {
+        ...elementToDuplicate,
+        id: elements.length, // Generate new id
+        position: { x: elementToDuplicate.position.x + 10, y: elementToDuplicate.position.y + 10 }, // Offset position
+        zIndex: elements.length, // Update zIndex
+      };
+      setElements([...elements, newElement]);
+    }
   };
 
   const removeElement = (id) => {
@@ -56,39 +151,80 @@ const Editor = () => {
 
   const handleDrag = (index) => (e, { x, y }) => {
     const newElements = [...elements];
-    newElements[index].position = { x, y };
+    const draggedElement = { ...newElements[index], position: { x, y } };
+    const snapPosition = calculateGuideLines(draggedElement);
+
+    // Apply magnetic snapping
+    newElements[index].position = snapPosition;
     setElements(newElements);
   };
 
+  const handleDragStop = () => {
+    setGuideLines([]);
+  };
+
+
+  const MAGNETIC_THRESHOLD = 5;
+
+  const calculateGuideLines = (draggedElement) => {
+    const lines = [];
+    let snapPosition = { x: draggedElement.position.x, y: draggedElement.position.y };
+
+    elements.forEach(el => {
+      if (el.id !== draggedElement.id) {
+
+        if (Math.abs(el.position.x - draggedElement.position.x) < MAGNETIC_THRESHOLD) {
+          lines.push({ type: 'vertical', position: el.position.x, isVisible: true });
+          snapPosition.x = el.position.x;
+        } else if (Math.abs((el.position.x + el.size.width) - (draggedElement.position.x + draggedElement.size.width)) < MAGNETIC_THRESHOLD) {
+          lines.push({ type: 'vertical', position: el.position.x + el.size.width, isVisible: true });
+          snapPosition.x = el.position.x + el.size.width - draggedElement.size.width;
+        }
+
+
+        if (Math.abs(el.position.y - draggedElement.position.y) < MAGNETIC_THRESHOLD) {
+          lines.push({ type: 'horizontal', position: el.position.y, isVisible: true });
+          snapPosition.y = el.position.y;
+        } else if (Math.abs((el.position.y + el.size.height) - (draggedElement.position.y + draggedElement.size.height)) < MAGNETIC_THRESHOLD) {
+          lines.push({ type: 'horizontal', position: el.position.y + el.size.height, isVisible: true });
+          snapPosition.y = el.position.y + el.size.height - draggedElement.size.height;
+        }
+      }
+    });
+
+    setGuideLines(lines);
+
+    return snapPosition;
+  };
+
+
   const handleResize = (index) => (e, direction, ref, delta) => {
+    debugger
     const newElements = [...elements];
     const element = newElements[index];
 
-    const newPosition = {
-      x: element.position.x + delta.width / 2,
-      y: element.position.y + delta.height / 2
+    const newSize = {
+      width: element.size.width + delta.width,
+      height: element.size.height + delta.height
     };
 
     newElements[index] = {
       ...element,
-      size: {
-        width: ref.offsetWidth,
-        height: ref.offsetHeight
-      },
-      position: newPosition
+      size: newSize
     };
 
     setElements(newElements);
   };
 
   const handleStyleChange = (property, value) => {
+    debugger
     const newElements = elements.map(el => {
       if (el.id === selectedElementId) {
         return {
           ...el,
           styles: {
             ...el.styles,
-            [property]: property === 'fontSize' || property === 'margin' || property === 'borderRadius' ? `${value}px` : value
+            [property]: property === 'fontSize' || property === 'margin' || property === 'borderRadius' ? `${value}%` : value
           }
         };
       }
@@ -154,47 +290,7 @@ const Editor = () => {
     { label: 'Border Radius', property: 'borderRadius', type: 'number' }
   ];
 
-  const generateHTMLTemplate = () => {
-    const htmlString = elements.map(el => {
-      const style = Object.entries(el.styles).map(([key, value]) => `${key}: ${value}`).join('; ');
-      const positionStyle = `position: absolute; left: ${el.position.x}px; top: ${el.position.y}px; width: ${el.size.width}px; height: ${el.size.height}px; z-index: ${el.zIndex};`;
 
-      let elementHTML = '';
-      switch (el.type) {
-        case 'label':
-          elementHTML = `<label style="${style}">${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>`;
-          break;
-        case 'input':
-          elementHTML = `<input type="text" placeholder="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" style="${style}" value="${el.fieldMapping ? `{${el.fieldMapping}}` : el.content}" />`;
-          break;
-        case 'image':
-          elementHTML = `<img src="${el.content}" alt="img" style="${style}" />`;
-          break;
-        case 'box':
-          elementHTML = `<div style="${style}"></div>`;
-          break;
-        default:
-          elementHTML = '';
-      }
-
-      return `<div style="${positionStyle}">${elementHTML}</div>`;
-    }).join('');
-
-    return htmlString;
-  };
-
-  // const exportHTMLTemplate = () => {
-  //   const htmlTemplate = generateHTMLTemplate();
-  //   const htmlString = `<!DOCTYPE html><html><head><style>body {position: relative;}</style></head><body>${htmlTemplate}</body></html>`;
-  //   const blob = new Blob([htmlString], { type: 'text/html' });
-  //   const url = URL.createObjectURL(blob);
-  //   const link = document.createElement('a');
-  //   link.href = url;
-  //   link.download = 'template.html';
-  //   document.body.appendChild(link);
-  //   link.click();
-  //   document.body.removeChild(link);
-  // };
 
   const saveTemplate = () => {
     const templateData = {
@@ -231,42 +327,43 @@ const Editor = () => {
   return (
     <>
       <div className="App h-100 w-100 d-flex align-items-center">
-        <div className="main mb-5">
-          <div className="layout mb-5">
+        <div className="main mb-5" style={{ width: '25%', }}>
+          <div className="layout mb-5 d-flex flex-column">
             <label htmlFor="">Select Layout</label>
             <ButtonGroup>
-              <Button active={layout === 'Horizontal'} outline onClick={() => setLayout('Horizontal')}>
+              <Button className='button-17' active={layout === 'Horizontal'} outline onClick={() => setLayout('Horizontal')}>
                 Horizontal
               </Button>
-              <Button active={layout === 'Vertical'} outline onClick={() => setLayout('Vertical')}>
+              <Button className='button-17' active={layout === 'Vertical'} outline onClick={() => setLayout('Vertical')}>
                 Vertical
               </Button>
             </ButtonGroup>
           </div>
           <div className="toolbar">
-            <button className='button-23' onClick={() => addElement('label')}>Add Label</button>
-            <button className='button-23' onClick={() => addElement('input')}>Add Input</button>
-            <button className='button-23' onClick={() => addElement('image')}>Add Image</button>
-            <button className='button-23' onClick={() => addElement('box')}>Add Box</button>
-            <button className='button-23' onClick={() => setElements([])}>Clear All</button>
-            <button className='button-23' onClick={bringForward}>Bring Forward</button>
-            <button className='button-23' onClick={sendBackward}>Send Backward</button>
-            <button className='button-23' onClick={saveTemplate}>Save Template</button>
-            <button className='button-23' onClick={togglePreview}>Preview</button>
+            <button className='button-17' onClick={() => addElement('label')}>Add Label</button>
+            <button className='button-17' onClick={() => addElement('input')}>Add Field</button>
+            <button className='button-17' onClick={() => addElement('image')}>Add Image</button>
+            {/*<button className='button-17' onClick={() => addElement('box')}>Add Box</button> */}
+            <button className='button-17' onClick={() => setElements([])}>Clear All</button>
+            <button className='button-17' onClick={saveTemplate}>Save Template</button>
+            <button className='button-17' onClick={togglePreview}>Preview</button>
           </div>
-          <div className="background-uploader">
+          <div className="background-uploader mt-5">
             {backgroundImage ? (
-              <div>
-                <img src={backgroundImage} alt="Background" style={{ width: '100px', height: '100px', marginRight: '10px' }} />
-                <button className='button-23' onClick={() => setBackgroundImage(null)}>Remove Background</button>
+              <div >
+
+                <button className='button-17' onClick={() => setBackgroundImage(null)}>Remove Background</button>
               </div>
             ) : (
-              <input type="file" accept="image/*" onChange={handleBackgroundImageChange} />
+              <div>
+                <label>Upload Background</label>
+                <input type="file" accept="image/*" onChange={handleBackgroundImageChange} />
+              </div>
             )}
           </div>
         </div>
 
-        <div style={{ width: '80%', transition: 'margin-right 0.3s ease', marginRight: isOpen ? '20%' : '0' }}>
+        <div style={{ width: '75%', height: '100%', display: 'flex', alignItems: 'center', transition: 'margin-right 0.3s ease', marginRight: isOpen ? '20%' : '0' }}>
           <div
             className="workspace"
             style={{
@@ -274,7 +371,8 @@ const Editor = () => {
               width: `${workspaceDimensions.width}mm`,
               height: `${workspaceDimensions.height}mm`,
               position: 'relative',
-              border: '1px solid black',
+              backgroundColor: 'white',
+              boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
               margin: '0 auto',
               backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
               backgroundSize: 'cover',
@@ -285,44 +383,136 @@ const Editor = () => {
               <Draggable
                 key={el.id}
                 position={el.position}
+                onStart={handleDragStop}
                 onStop={handleDrag(index)}
                 bounds="parent"
-                grid={[5, 5]}
+                grid={[1, 1]}
                 handle='.drag-handle'
-                
+
               >
                 <Resizable
+                  onMouseDownCapture={() => {
+                    setFlag(true);
+                  }}
+                  onMouseUpCapture={() => {
+                    setFlag(false);
+                  }}
                   size={{ width: el.size.width, height: el.size.height }}
                   onResizeStop={handleResize(index)}
                   minWidth={50}
                   minHeight={20}
-                bounds={'parent'}
-                  grid={[5, 5]}
+                  bounds={'parent'}
+                  grid={[1, 1]}
                   style={{
                     position: 'absolute',
                     border: '1px solid #ddd',
                     zIndex: el.zIndex,
                     ...el.styles
                   }}
+                  handleStyles={{
+                    top: flag
+                      ? {
+                        marginTop: -3,
+                        marginLeft: -5,
+                        top: 0,
+                        left: "50%",
+                        cursor: "ns-resize",
+                        border: "3px solid #999",
+                        borderLeft: "none",
+                        borderRight: "none",
+                        borderBottom: "none",
+                        borderWidth: 3,
+                        borderColor: "#4d4d4d",
+                        width: 10,
+                        height: 10,
+                        boxSizing: "border-box",
+                        zIndex: 1
+                      }
+                      : "",
+                    left: flag
+                      ? {
+                        marginTop: -5,
+                        marginLeft: -3,
+                        top: "50%",
+                        left: 0,
+                        cursor: "ew-resize",
+                        border: "3px solid #999",
+                        borderTop: "none",
+                        borderRight: "none",
+                        borderBottom: "none",
+                        borderWidth: 3,
+                        borderColor: "#4d4d4d",
+                        width: 10,
+                        height: 10,
+                        boxSizing: "border-box",
+                        zIndex: 1
+                      }
+                      : "",
+                    bottom: flag && {
+                      marginTop: -7,
+                      marginLeft: -5,
+                      top: "100%",
+                      left: "50%",
+                      cursor: "ns-resize",
+                      border: "3px solid #999",
+                      borderLeft: "none",
+                      borderRight: "none",
+                      borderTop: "none",
+                      borderWidth: 3,
+                      borderColor: "#4d4d4d",
+                      width: 10,
+                      height: 10,
+                      boxSizing: "border-box",
+                      zIndex: 1
+                    },
+                    right: flag
+                      ? {
+                        marginTop: -5,
+                        marginLeft: -7,
+                        top: "50%",
+                        left: "100%",
+                        cursor: "ew-resize",
+                        border: "3px solid #999",
+                        borderTop: "none",
+                        borderLeft: "none",
+                        borderBottom: "none",
+                        borderWidth: 3,
+                        borderColor: "#4d4d4d",
+                        width: 10,
+                        height: 10,
+                        boxSizing: "border-box",
+                        zIndex: 1
+                      }
+                      : ""
+                  }}
+                  handleComponent={{
+                    topRight: flag ? <ResizeHandle /> : "",
+                    topLeft: flag ? <ResizeHandle /> : "",
+                    bottomLeft: flag ? <ResizeHandle /> : "",
+                    bottomRight: flag ? <ResizeHandle /> : ""
+                  }}
+
                   onDoubleClick={() => {
                     setSelectedElementId(el.id);
                     toggleOff();
                     setStyles(el.styles);
                   }}
+                  onContextMenu={(e) => handleRightClick(e, el.id)}
                 >
-                  <div className={`element ${el.type}`} style={{ width: '100%', height: '100%' }}>
-                  <div className="drag-handle" style={{ cursor: 'move', position: 'absolute', bottom :'-18px', right :0  }}>
-                  <TfiHandDrag />
+                  <div className={`element ${el.type}`} style={{ width: '100%', height: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                    <div className="drag-handle" style={{ cursor: 'move', position: 'absolute', bottom: '-20px', right: '50%' }}>
+                      <TfiHandDrag />
                     </div>
-                    {el.type === 'label' && <label style={{ ...el.styles }}>{el.content}</label>}
-                    {el.type === 'input' && <input type="text" placeholder={el.content} style={{ ...el.styles, width: '100%', height: '100%' }} />}
-                    {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
+                    {el.type === 'label' && <span style={{ ...el.style }}>{el.content}</span>}
+                    {el.type === 'input' && <span style={{ ...el.styles, width: '100%', height: '100%' }}>{el.content}</span>}
+                    {el.type === 'image' && <img src={el.content} alt="img" style={{ ...el.styles, width: '100%', height: '100%' }} />}
                     {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
-                    <CloseOutlined onClick={() => removeElement(el.id)} style={{ position: 'absolute', top: '-8px', right: '-8px', height: '1rem', width: '1rem', zIndex: 10 }} />
                   </div>
                 </Resizable>
               </Draggable>
             ))}
+            <GuideLines lines={guideLines} containerSize={workspaceDimensions} />
+
           </div>
         </div>
 
@@ -373,6 +563,7 @@ const Editor = () => {
                     ))}
                   </select>
                 </div>
+                
               </div>
             </OffcanvasBody>
           </Offcanvas>
@@ -380,52 +571,70 @@ const Editor = () => {
       </div>
 
       <Modal isOpen={isPreviewOpen} toggle={togglePreview} size="lg">
-        <ModalHeader toggle={togglePreview}>ID Card Preview</ModalHeader>
-        <ModalBody>
-          <div
-            className="workspace"
-            style={{
-              width: `${workspaceDimensions.width}mm`,
-              height: `${workspaceDimensions.height}mm`,
-              position: 'relative',
-              border: '1px solid black',
-              margin: '0 auto',
-              backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            {elements.map((el, index) => (
-              <div
-                key={el.id}
+        <ModalHeader toggle={togglePreview}>ID Card Preview  </ModalHeader>
+        <ModalBody ref={contentToPrint} style={{ display: 'grid', gridTemplateRows: 'repeat(2, 1fr)', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }} >
+
+
+          {
+            Array.from({ length: 10 }).map((_, i) => {
+              return <div
+                className="workspace"
                 style={{
-                  position: 'absolute',
-                  left: `${el.position.x}px`,
-                  top: `${el.position.y}px`,
-                  width: `${el.size.width}px`,
-                  height: `${el.size.height}px`,
-                  zIndex: el.zIndex,
-                  ...el.styles,
+                  width: `${workspaceDimensions.width}mm`,
+                  height: `${workspaceDimensions.height}mm`,
+                  position: 'relative',
+                  border: '1px solid black',
+                  margin: '0 auto',
+                  backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
                 }}
               >
-                {el.type === 'label' && <label style={{ ...el.styles }}>{el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>}
-                {el.type === 'input' && <input type="text" placeholder={el.fieldMapping ? `{${el.fieldMapping}}` : el.content} style={{ ...el.styles, width: '100%', height: '100%' }} />}
-                {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
-                {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
+                {elements.map((el, index) => (
+                  <div
+                    key={el.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${el.position.x}px`,
+                      top: `${el.position.y}px`,
+                      width: `${el.size.width}px`,
+                      height: `${el.size.height}px`,
+                      zIndex: el.zIndex,
+                      ...el.styles,
+                    }}
+                  >
+                    {el.type === 'label' && <label style={{ ...el.styles, whiteSpace: 'nowrap' }}>{el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>}
+                    {el.type === 'input' && <input type="text" placeholder={el.fieldMapping ? `{${el.fieldMapping}}` : el.content} style={{ ...el.styles, width: '100%', height: '100%' }} />}
+                    {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
+                    {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            })
+          }
         </ModalBody>
       </Modal>
 
-      <div className="template-list" style={{ marginLeft: '20px' }}>
+      {contextMenu.visible && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onDelete={() => handleContextMenuAction('delete')}
+          onBringForward={() => handleContextMenuAction('bringForward')}
+          onSendBackward={() => handleContextMenuAction('sendBackward')}
+          onDuplicate={() => handleContextMenuAction('duplicate')}
+          onSettings={() => handleContextMenuAction('settings')}
+        />
+      )}
+
+      {/* <div className="template-list" style={{ marginLeft: '20px' }}>
         <h3>Saved Templates</h3>
         {templates.map(template => (
           <div key={template.id} className="template-item">
             <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
           </div>
         ))}
-      </div>
+      </div> */}
     </>
   );
 };
