@@ -11,6 +11,7 @@ import { useReactToPrint } from 'react-to-print';
 import ContextMenu from '../../../Components/ContexctMenu';
 import GuideLines from '../../../Components/GuildeLines/GuildLines';
 import uniqid from 'uniqid';
+import { addTemplate, getAllTemplate } from '../../../service/idcard';
 
 const Editor = () => {
   const [elements, setElements] = useState([]);
@@ -24,7 +25,7 @@ const Editor = () => {
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [flag, setFlag] = useState(true)
-  const availableFields = ['student_name', 'class', 'address'];
+  const availableFields = ['studentname', 'fathersname', 'mothersname','class','address','mobilenumber','schoolname','session','studentidno','aadhar','dob','section','housename'];
   const contentToPrint = useRef(null);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, elementId: null });
   const [guideLines, setGuideLines] = useState([]);
@@ -309,23 +310,58 @@ const Editor = () => {
 
 
 
-  const saveTemplate = () => {
+  // const saveTemplate = () => {
+  //   const templateData = {
+  //     elements: elements.map(el => ({ ...el })),
+  //     layout,
+  //     backgroundImage
+  //   };
+  //   console.log(templateData)
+  //   setTemplates([...templates, { id: uniqid(), elements: JSON.parse(JSON.stringify(elements)) }]);
+  // };
+
+  // const loadTemplate = (templateId) => {
+  //   const template = templates.find(t => t.id === templateId);
+  //   if (template) {
+  //     setElements(JSON.parse(JSON.stringify(template.elements)));
+  //   }
+  // };
+
+  const saveTemplate = async() => {
     const templateData = {
       elements: elements.map(el => ({ ...el })),
       layout,
       backgroundImage
     };
-    console.log(templateData)
-    setTemplates([...templates, { id: uniqid(), elements: JSON.parse(JSON.stringify(elements)) }]);
+
+    try {
+
+      const response = await  addTemplate(templateData);
+      alert("template saved successfully")
+      console.log(response)
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await getAllTemplate()
+      const data = await response
+      setTemplates(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const loadTemplate = (templateId) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      setElements(JSON.parse(JSON.stringify(template.elements)));
+      setElements(template.elements);
+      setLayout(template.layout);
+      setBackgroundImage(template.backgroundImage);
     }
   };
-
   const handleBackgroundImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -340,6 +376,11 @@ const Editor = () => {
   const togglePreview = () => {
     setIsPreviewOpen(!isPreviewOpen);
   };
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
 
   return (
     <>
@@ -364,6 +405,7 @@ const Editor = () => {
             <button className='button-17' onClick={() => setElements([])}>Clear All</button>
             <button className='button-17' onClick={saveTemplate}>Save Template</button>
             <button className='button-17' onClick={togglePreview}>Preview</button>
+          
           </div>
           <div className="background-uploader mt-5">
             {backgroundImage ? (
@@ -641,6 +683,14 @@ const Editor = () => {
           }
         </ModalBody>
       </Modal>
+      <div className="template-list" style={{ marginLeft: '20px' }}>
+        <h3>Saved Templates</h3>
+        {templates.map(template => (
+        <div key={template.id} className="template-item">
+          <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
+        </div>
+      ))}
+      </div>
 
       {contextMenu.visible && (
         <ContextMenu
