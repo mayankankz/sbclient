@@ -18,6 +18,7 @@ const StudentList = () => {
     class: '',
     section: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchSchools = async () => {
@@ -86,29 +87,62 @@ const StudentList = () => {
       return;
     }
 
+    setIsLoading(true);
     const template = templates.find(tpl => tpl.id === selectedTemplate);
+
+    const idCardsHtml = filteredStudents.map(student => `
+      <div class="id-card">
+        ${ReactDOMServer.renderToStaticMarkup(
+          <IDcard
+            layout={template.layout}
+            backgroundImage={template.backgroundImage}
+            elements={template.elements}
+            data={student}
+          />
+        )}
+      </div>
+    `).join('');
+
+    const printHtml = `
+      <html>
+        <head>
+          <style>
+            @page {
+              size: A4;
+              margin: 10mm;
+            }
+            body {
+              margin: 0;
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              grid-template-rows: repeat(5, 1fr);
+              gap: 10px;
+              height: 100%;
+              box-sizing: border-box;
+            }
+            .id-card {
+              width: 100%;
+              height: 100%;
+              box-sizing: border-box;
+              page-break-inside: avoid;
+            }
+          </style>
+        </head>
+        <body>
+          ${idCardsHtml}
+        </body>
+      </html>
+    `;
+
     const printWindow = window.open('', '_blank');
-
-    filteredStudents.forEach(student => {
-      const studentHtml = `
-        <div style="display: grid; grid-template-rows: repeat(2, 1fr); grid-template-columns: repeat(2, 1fr); gap: 10px;">
-          ${ReactDOMServer.renderToStaticMarkup(
-            <IDcard
-              layout={template.layout}
-              backgroundImage={template.backgroundImage}
-              elements={JSON.parse(template.elements)}
-              data={student}
-            />
-          )}
-        </div>
-        <div style="page-break-after: always;"></div>
-      `;
-
-      printWindow.document.write(studentHtml);
-    });
-
+    printWindow.document.write(printHtml);
     printWindow.document.close();
-    printWindow.print();
+
+    // Wait until the content is fully loaded before printing
+    printWindow.onload = () => {
+      setIsLoading(false);
+      printWindow.print();
+    };
   };
 
   const filteredStudents = students.filter(student => {
@@ -199,7 +233,9 @@ const StudentList = () => {
             <Option key={template.id} value={template.id}>{template.name}</Option>
           ))}
         </Select>
-        <Button type="primary" onClick={handlePrintAllIDCards}>Print All ID Cards</Button>
+        <Button type="primary" onClick={handlePrintAllIDCards} disabled={isLoading}>
+          {isLoading ? 'Loading...' : 'Print All ID Cards'}
+        </Button>
       </div>
       <Table dataSource={filteredStudents} columns={columns} rowKey="id" />
     </div>
