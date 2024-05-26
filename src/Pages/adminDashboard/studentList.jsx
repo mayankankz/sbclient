@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Select, Table, Button } from 'antd';
 import { getAllSchool, getAllStudentBySchool } from '../../service/student';
 import { getAllTemplate } from '../../service/idcard';
-
+import IDcard from '../../Components/IDCARD/IDcard';
+import ReactDOMServer from 'react-dom/server';
 const { Option } = Select;
 
 const StudentList = () => {
@@ -79,50 +80,36 @@ const StudentList = () => {
     setSelectedTemplate(value);
   };
 
-
-
   const handlePrintAllIDCards = () => {
     if (!selectedTemplate) {
       alert('Please select a template.');
       return;
     }
-  
+
     const template = templates.find(tpl => tpl.id === selectedTemplate);
     const printWindow = window.open('', '_blank');
-  
+
     filteredStudents.forEach(student => {
-        const studentHtml = `
+      const studentHtml = `
         <div style="display: grid; grid-template-rows: repeat(2, 1fr); grid-template-columns: repeat(2, 1fr); gap: 10px;">
-          <div class="workspace" style="width: 86mm; height: 54mm; position: relative; border: 1px solid black; margin: 0 auto; background-image:  'none'}; background-size: cover; background-position: center;">
-            ${template.elements.map((el, index) => {
-              let elementHtml = '';
-              if (el.fieldMapping && student[el.fieldMapping]) {
-                elementHtml += `<div key="${el.id}" style="position: absolute; left: ${el.position.x}px; top: ${el.position.y}px; width: ${el.size.width}px; height: ${el.size.height}px; z-index: ${el.zIndex}; ${el.styles}">`;
-                if (el.type === 'label') {
-                  elementHtml += `<label style="white-space: nowrap; ${el.styles}">${student[el.fieldMapping]}</label>`;
-                } else if (el.type === 'input') {
-                  elementHtml += `<input type="text" placeholder="${student[el.fieldMapping]}" style="width: 100%; height: 100%; ${el.styles}" />`;
-                } else if (el.type === 'image') {
-                  elementHtml += `<img src="${el.content}" alt="img" style="width: 100%; height: 100%;" />`;
-                } else if (el.type === 'box') {
-                  elementHtml += `<div style="width: 100%; height: 100%; ${el.styles}"></div>`;
-                }
-                elementHtml += `</div>`;
-              }
-              return elementHtml;
-            }).join('')}
-          </div>
-        </div>`;
-      
-  
+          ${ReactDOMServer.renderToStaticMarkup(
+            <IDcard
+              layout={template.layout}
+              backgroundImage={template.backgroundImage}
+              elements={JSON.parse(template.elements)}
+              data={student}
+            />
+          )}
+        </div>
+        <div style="page-break-after: always;"></div>
+      `;
+
       printWindow.document.write(studentHtml);
-      printWindow.document.write('<div style="page-break-after: always;"></div>');
     });
-  
+
     printWindow.document.close();
     printWindow.print();
   };
-  
 
   const filteredStudents = students.filter(student => {
     return (

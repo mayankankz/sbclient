@@ -12,6 +12,7 @@ import ContextMenu from '../../../Components/ContexctMenu';
 import GuideLines from '../../../Components/GuildeLines/GuildLines';
 import uniqid from 'uniqid';
 import { addTemplate, getAllTemplate } from '../../../service/idcard';
+import IDcard from '../../../Components/IDCARD/IDcard';
 
 const Editor = () => {
   const [elements, setElements] = useState([]);
@@ -357,7 +358,7 @@ const Editor = () => {
   const loadTemplate = (templateId) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      setElements(template.elements);
+      setElements(JSON.parse(template.elements));
       setLayout(template.layout);
       setBackgroundImage(template.backgroundImage);
     }
@@ -646,40 +647,7 @@ const Editor = () => {
 
           {
             Array.from({ length: 10 }).map((_, i) => {
-              return <div
-                className="workspace"
-                style={{
-                  width: `${workspaceDimensions.width}mm`,
-                  height: `${workspaceDimensions.height}mm`,
-                  position: 'relative',
-                  border: '1px solid black',
-                  margin: '0 auto',
-                  backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              >
-                {elements.map((el, index) => (
-                  <div
-                    key={el.id}
-                    style={{
-                      position: 'absolute',
-                      left: `${el.position.x}px`,
-                      top: `${el.position.y}px`,
-                      width: `${el.size.width}px`,
-                      height: `${el.size.height}px`,
-                      zIndex: el.zIndex,
-                      ...el.styles,
-                    }}
-                  >
-                    {el.type === 'label' && <label style={{ ...el.styles, whiteSpace: 'nowrap' }}>{el.fieldMapping ? `{${el.fieldMapping}}` : el.content}</label>}
-                    {el.type === 'input' && <input type="text" placeholder={el.fieldMapping ? `{${el.fieldMapping}}` : el.content} style={{ ...el.styles, width: '100%', height: '100%' }} />}
-                    {el.type === 'image' && <img src={el.content} alt="img" style={{ width: '100%', height: '100%' }} />}
-                    {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
-                  </div>
-                ))}
-              </div>
-            })
+              return <IDcard key={i} elements={elements} backgroundImage={backgroundImage} layout={layout} isPreview={true} /> })
           }
         </ModalBody>
       </Modal>
@@ -704,14 +672,7 @@ const Editor = () => {
         />
       )}
 
-      {/* <div className="template-list" style={{ marginLeft: '20px' }}>
-        <h3>Saved Templates</h3>
-        {templates.map(template => (
-          <div key={template.id} className="template-item">
-            <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
-          </div>
-        ))}
-      </div> */}
+     
     </>
   );
 };

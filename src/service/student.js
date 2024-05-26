@@ -14,7 +14,7 @@ export const getAllSchool = async (data) => {
 export const getAllStudentBySchool = async (schoolId) => {
   try {
     const response = await api.get(
-      `${apiUrl}/user/getallstudentsdatabyschoolcode/${schoolId}`
+      `${apiUrl}/user/getallstudentsdatawithimages/${schoolId}`
     );
     return response.data;
   } catch (error) {
