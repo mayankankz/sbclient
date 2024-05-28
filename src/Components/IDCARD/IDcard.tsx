@@ -1,16 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-const IDcard = ({ layout, backgroundImage, elements, data ,isPreview=false }) => {
-  const [workspaceDimensions, setWorkspaceDimensions] = useState({ width: 86, height: 54 });
+const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
+  const [workspaceDimensions, setWorkspaceDimensions] = useState(size);
 
-  useEffect(() => {
-    if (layout === 'Horizontal') {
-      setWorkspaceDimensions({ width: 86, height: 54 });
-    } else {
-      setWorkspaceDimensions({ width: 54, height: 86 });
-    }
-  }, [layout]);
-
+  
   const getContent = (el) => {
    if(!isPreview){ if (el.fieldMapping && data[el.fieldMapping]) {
       return data[el.fieldMapping];
@@ -25,14 +18,13 @@ const IDcard = ({ layout, backgroundImage, elements, data ,isPreview=false }) =>
         width: `${workspaceDimensions.width}mm`,
         height: `${workspaceDimensions.height}mm`,
         position: 'relative',
-        border: '1px solid black',
         margin: '0 auto',
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
     >
-      {elements.map((el, index) => (
+      {JSON.parse(elements).map((el, index) => (
         <div
           key={el.id}
           style={{
@@ -45,9 +37,9 @@ const IDcard = ({ layout, backgroundImage, elements, data ,isPreview=false }) =>
             ...el.styles,
           }}
         >
-          {el.type === 'label' && <label style={{ ...el.styles, whiteSpace: 'nowrap' }}>{getContent(el)}</label>}
-          {el.type === 'input' && <input type="text" value={getContent(el)} style={{ ...el.styles, width: '100%', height: '100%' }} readOnly />}
-          {el.type === 'image' && <img src={data.img} alt="img" style={{ width: '100%', height: '100%' }} />}
+          {el.type === 'label' && <span style={{ ...el.styles, whiteSpace: 'nowrap' }}>{getContent(el)}</span>}
+          {el.type === 'input' && <span  style={{ ...el.styles, width: '100%', height: '100%' }}>{getContent(el)}</span>}
+          {el.type === 'image' && <img src={data?.img || 'https://via.placeholder.com/150'} alt="img" style={{...el.styles,objectFit:'fill ', width: '100%', height: '100%' }} />}
           {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
         </div>
       ))}

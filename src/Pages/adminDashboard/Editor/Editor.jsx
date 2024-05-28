@@ -21,7 +21,7 @@ const Editor = () => {
   const [templates, setTemplates] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [layout, setLayout] = useState('Horizontal');
-  const [workspaceDimensions, setWorkspaceDimensions] = useState({ width: 86, height: 54 });
+  const [workspaceDimensions, setWorkspaceDimensions] = useState({ width: 87, height: 55 });
   const [backgroundImage, setBackgroundImage] = useState(null);
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -112,9 +112,9 @@ const Editor = () => {
 
   useEffect(() => {
     if (layout === 'Horizontal') {
-      setWorkspaceDimensions({ width: 86, height: 54 });
+      setWorkspaceDimensions({ width: 87, height: 55 });
     } else {
-      setWorkspaceDimensions({ width: 54, height: 86 });
+      setWorkspaceDimensions({ width: 55, height: 87 });
     }
   }, [layout]);
 
@@ -621,7 +621,7 @@ const Editor = () => {
                     />
                   </div>
                 )}
-                <div className="style-option">
+                {elements.find(el => el.id === selectedElementId).type === 'input' && <div className="style-option">
                   <label>Field Mapping</label>
                   <select
                     value={elements.find(el => el.id === selectedElementId)?.fieldMapping || ''}
@@ -632,7 +632,7 @@ const Editor = () => {
                       <option key={field} value={field}>{field}</option>
                     ))}
                   </select>
-                </div>
+                </div>}
 
               </div>
             </OffcanvasBody>

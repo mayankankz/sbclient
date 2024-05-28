@@ -27,7 +27,7 @@ const items = [
   getItem('Editor', '2', <EditOutlined />, null, '/admin/editor'),
   getItem('Student', 'sub1', <UserOutlined />, [
     getItem('Add Student', '3', null, null, '/admin/addstudent'),
-    getItem('Student List', '4', null, null, '/admin/studentlist'),
+    getItem('Generate ID Cards', '4', null, null, '/admin/studentlist'),
     getItem('Check List', '5', null, null, '/admin/checklist'),
   ], '/admin/user'),
   getItem('Create School', '9', <HomeOutlined />, null, '/admin/create-school'),
