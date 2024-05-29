@@ -1,1 +1,1 @@
-export const apiUrl = "http://localhost:3002";
+export const apiUrl = "https://api.sbonlineservices.in";
