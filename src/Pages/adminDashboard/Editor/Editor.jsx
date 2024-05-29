@@ -235,23 +235,30 @@ const Editor = () => {
     setElements(newElements);
   };
 
+
+
   const handleStyleChange = (property, value) => {
-    debugger
+    debugger;
     const newElements = elements.map(el => {
       if (el.id === selectedElementId) {
         return {
           ...el,
           styles: {
             ...el.styles,
-            [property]: property === 'fontSize' || property === 'margin' || property === 'borderRadius' ? `${value}%` : value
+            [property]: property === 'borderRadius' ? `${value}%` : `${value}px`
           }
         };
       }
       return el;
     });
+  
     setElements(newElements);
-    setStyles(prevStyles => ({ ...prevStyles, [property]: property === 'fontSize' || property === 'margin' || property === 'borderRadius' ? `${value}px` : value }));
+    setStyles(prevStyles => ({
+      ...prevStyles,
+      [property]: property === 'borderRadius' ? `${value}%` : `${value}px`
+    }));
   };
+  
 
   const handleContentChange = (content) => {
     const newElements = elements.map(el => {
@@ -462,14 +469,14 @@ const Editor = () => {
                   onResizeStart={handleStop}
                   onResizeStop={handleResize(index)}
                   minWidth={50}
-                  minHeight={20}
+                  minHeight={15}
                   bounds={'parent'}
                   grid={[1, 1]}
                   style={{
                     position: 'absolute',
                     border: '1px solid #ddd',
                     zIndex: el.zIndex,
-                    ...el.styles
+                    
                   }}
                   handleStyles={{
                     top: {
@@ -573,7 +580,7 @@ const Editor = () => {
                     {el.id == selectedElementId && <div className="drag-handle" style={{ cursor: 'move', position: 'absolute', bottom: '-20px', right: '50%' }}>
                       <TfiHandDrag style={{ zIndex: 999 }} />
                     </div>}
-                    {el.type === 'label' && <span style={{ ...el.style }}>{el.content}</span>}
+                    {el.type === 'label' && <div style={{ ...el.styles }}>{el.content}</div>}
                     {el.type === 'input' && <span style={{ ...el.styles, width: '100%', height: '100%' }}>{el.content}</span>}
                     {el.type === 'image' && <img src={el.content} alt="img" style={{ ...el.styles, width: '100%', height: '100%' }} />}
                     {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
@@ -647,7 +654,7 @@ const Editor = () => {
 
           {
             Array.from({ length: 10 }).map((_, i) => {
-              return <IDcard key={i} elements={elements} backgroundImage={backgroundImage} layout={layout} isPreview={true} /> })
+              return <IDcard size={layout == 'Vertical' ? { width: 55, height: 87 } : { width: 87, height: 55 }} key={i} elements={elements} backgroundImage={backgroundImage} layout={layout} isPreview={true} /> })
           }
         </ModalBody>
       </Modal>

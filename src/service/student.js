@@ -11,14 +11,14 @@ export const getAllSchool = async (data) => {
   }
 };
 
-export const getAllStudentBySchool = async (schoolId) => {
+export const getAllStudentBySchool = async (schoolId, className) => {
   try {
     const response = await api.get(
-      `${apiUrl}/user/getallstudentsdatawithimages/${schoolId}`
+      `${apiUrl}/user/getallstudentsdatawithimages/${schoolId}/${className}`
     );
     return response.data;
   } catch (error) {
-    console.error(error);
-    throw error;
+    console.error('Error fetching student data:', error);
+    throw new Error('Failed to fetch student data');
   }
 };

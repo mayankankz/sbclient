@@ -24,7 +24,7 @@ const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
         backgroundPosition: 'center',
       }}
     >
-      {elements.map((el, index) => (
+      {JSON.parse(elements).map((el, index) => (
         <div
           key={el.id}
           style={{

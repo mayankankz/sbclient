@@ -11,7 +11,25 @@ const { Option } = Select;
 const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [schools, setSchools] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const [columns,setColums] = useState([]);
+  const [classes, setClasses] = useState([
+    'Nursery',
+    'KG 1',
+    'KG 2',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    '11',
+    '12'
+  ]
+  );
   const [sections, setSections] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -62,30 +80,29 @@ const StudentList = () => {
     fetchTemplates();
   }, []);
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      if (filters.school) {
-        try {
-          const response = await getAllStudentBySchool(filters.school);
-          const studentsData = response.students;
-          setStudents(studentsData);
-
-          const distinctClasses = [...new Set(studentsData.map(student => student.class))];
-          const distinctSections = [...new Set(studentsData.map(student => student.section))];
-          setClasses(distinctClasses);
-          setSections(distinctSections);
-        } catch (error) {
-          console.error('Error:', error);
-        }
-      } else {
-        setStudents([]);
-        setClasses([]);
-        setSections([]);
+  const fetchStudents = async () => {
+    if (filters.school) {
+      try {
+        const response = await getAllStudentBySchool(filters.school, filters.class);
+        const studentsData = response.students;
+        setStudents(studentsData);
+        debugger
+        setColums(JSON.parse(JSON.parse(response.colums.validationoptions)).map((option)=>{
+          return {
+            title: option,
+            dataIndex: option,
+            key: option,
+          }
+        }));
+      } catch (error) {
+        console.error('Error:', error);
       }
-    };
-
-    fetchStudents();
-  }, [filters.school]);
+    } else {
+      setStudents([]);
+      setClasses([]);
+      setSections([]);
+    }
+  };
 
   const handleFilterChange = (filterName, filterValue) => {
     setFilters(prevFilters => ({
@@ -238,27 +255,9 @@ const StudentList = () => {
     );
   });
 
-  const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'studentname',
-      key: 'studentname',
-    },
-    {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-    },
-    {
-      title: 'Class',
-      dataIndex: 'class',
-      key: 'class',
-    },
-    {
-      title: 'Mobile Number',
-      dataIndex: 'mobilenumber',
-      key: 'mobilenumber',
-    },
+
+
+  const actionColumns = [
     {
       title: 'Action',
       key: 'action',
@@ -273,49 +272,45 @@ const StudentList = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h3>Student List</h3>
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
-        <Select
-          placeholder="Select School"
-          style={{ width: 200 }}
-          value={filters.school}
-          onChange={(value) => handleFilterChange('school', value)}
-          allowClear
-        >
-          <Option value="">Select School</Option>
-          {schools.map(school => (
-            <Option key={school.schoolcode} value={school.schoolcode}>{school.schoolname}</Option>
-          ))}
-        </Select>
-        <Select
-          placeholder="Select Class"
-          style={{ width: 200 }}
-          value={filters.class}
-          onChange={(value) => handleFilterChange('class', value)}
-          allowClear
-          required
-        >
-          <Option value="">Select Class</Option>
-          {classes.map(cls => (
-            <Option key={cls} value={cls}>{cls}</Option>
-          ))}
-        </Select>
-        {/*<Select
-          placeholder="Select Section"
-          style={{ width: 200 }}
-          value={filters.section}
-          onChange={(value) => handleFilterChange('section', value)}
-          allowClear
-        >
-          <Option value="">Select Section</Option>
-          {sections.map(section => (
-            <Option key={section} value={section}>{section}</Option>
-          ))}
-        </Select>*/}
-        <Button type="primary" onClick={() => setopenTemplates(true)}>Select Template</Button>
-        <Button type="primary" onClick={handlePrintAllIDCards} disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Print All ID Cards'}
-        </Button>
-        <Button type='primary' onClick={() => setOpen(true)} >Page Settings</Button>
+      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Select
+            placeholder="Select School"
+            style={{ width: 200 }}
+            value={filters.school}
+            onChange={(value) => handleFilterChange('school', value)}
+            allowClear
+          >
+            <Option value="">Select School</Option>
+            {schools.map(school => (
+              <Option key={school.schoolcode} value={school.schoolcode}>{school.schoolname}</Option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Select Class"
+            style={{ width: 200 }}
+            value={filters.class}
+            onChange={(value) => handleFilterChange('class', value)}
+            allowClear
+            required
+          >
+            <Option value="">Select Class</Option>
+            {classes.map(cls => (
+              <Option key={cls} value={cls}>{cls}</Option>
+            ))}
+          </Select>
+          <Button type="primary" onClick={async () => await fetchStudents()}>Fetch Students</Button>
+        </div>
+
+        {students.length > 0 && <div style={{ display: 'flex', gap: '10px'}}>
+          <Button type="primary" onClick={() => setopenTemplates(true)}>Select Template</Button>
+
+          <Button type='primary' onClick={() => setOpen(true)} >Page Settings</Button>
+
+          <Button type="primary" onClick={handlePrintAllIDCards} disabled={isLoading}>
+            {isLoading ? 'Loading...' : 'Print All ID Cards'}
+          </Button>
+        </div>}
 
         {open && <div>
           <ModalPopup open={open} setOpen={setOpen} title="Page Settings">
@@ -369,7 +364,7 @@ const StudentList = () => {
               <Row>
                 {templates.map(template => (
                   <Col lg={4} md={4}>
-                    <div onClick={() => handleTemplateChange(template.id)} style={{ scale: '0.7' }}>
+                    <div onClick={() => handleTemplateChange(template.id)} style={{ scale: '0.7' }} className={`${selectedTemplate == template.id ? 'selected' : ''}`}>
                       <IDcard
                         size={template.layout == 'Vertical' ? { width: 55, height: 87 } : { width: 87, height: 55 }}
                         backgroundImage={template.backgroundImage}
@@ -384,7 +379,7 @@ const StudentList = () => {
           </Modal>
         </div>}
       </div>
-      <Table dataSource={filteredStudents} columns={columns} rowKey="id" pagination={true} size='small' />
+      <Table dataSource={filteredStudents} columns={columns.concat(actionColumns)} rowKey="id" pagination={true} size='small' />
     </div>
   );
 };
