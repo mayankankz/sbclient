@@ -107,7 +107,6 @@ function App() {
           </div>
         </div>
       ) : (
-        // Rest of your JSX code
         <>
           {isSpecialRoute ? (
             <Routes>
@@ -116,7 +115,7 @@ function App() {
               <Route path="/error-404" element={<ErrorPage />} />
             </Routes>
           ) : (
-            <div className="page-wrapper">
+            <div className="page-wrapper headerglass">
               {(!isAdminRoute && !location.pathname.includes("login")) ? <Header /> : ""}
               <Routes>
                 <Route path="/" element={<Index2 />} />

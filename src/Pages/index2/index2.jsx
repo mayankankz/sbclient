@@ -13,7 +13,7 @@ import Portfolio from "../../Components/portfolio/Protfolio";
 
 function index2() {
   return (
-    <div className="page-wrapper">
+    <div className="page-wrapper ">
       <HeroBanner2 />
       <div className="page-content">
         <Feature />

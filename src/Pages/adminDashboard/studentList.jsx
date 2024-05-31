@@ -11,7 +11,7 @@ const { Option } = Select;
 const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [schools, setSchools] = useState([]);
-  const [columns,setColums] = useState([]);
+  const [columns, setColums] = useState([]);
   const [classes, setClasses] = useState([
     'Nursery',
     'KG 1',
@@ -37,7 +37,7 @@ const StudentList = () => {
   const [openTemplates, setopenTemplates] = useState(false)
   const [setting, setSettings] = useState({
     pageType: 'A4',
-    Layout: 'Landscape',
+    Layout: 'Portrait',
     Margin: '3'
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -87,7 +87,7 @@ const StudentList = () => {
         const studentsData = response.students;
         setStudents(studentsData);
         debugger
-        setColums(JSON.parse(JSON.parse(response.colums.validationoptions)).map((option)=>{
+        setColums(JSON.parse(JSON.parse(response.colums[0].validationoptions)).map((option) => {
           return {
             title: option,
             dataIndex: option,
@@ -137,20 +137,24 @@ const StudentList = () => {
     )}
       </div>
     `).join('');
+    debugger
+    const isVertical = template.layout === 'Vertical';
+    const columns = setting.pageType === 'A3' ? (isVertical ? 3 : 3) : (isVertical ? 5 : 2);
+    const rows = setting.pageType === 'A3' ? (isVertical ? 6 : 6) : (isVertical ? 2 : 5);
 
     const printHtml = `
       <html>
         <head>
           <style>
             @page {
-              size: ${setting.pageType};
+              size: ${setting.pageType} ${setting.Layout};
               margin: ${setting.Margin}mm;
             }
             body {
               margin: 0;
               display: grid;
-              grid-template-columns: repeat(${setting.pageType == 'A3' ? 3 : 2}, 1fr);
-              grid-template-rows: repeat(${setting.pageType == 'A3' ? 6 : 5}, 1fr);
+              grid-template-columns: repeat(${columns}, 1fr);
+              grid-template-rows: repeat(${rows}, 1fr);
               gap: 10px;
               height: 100%;
               box-sizing: border-box;
@@ -204,20 +208,24 @@ const StudentList = () => {
     )}
       </div>
     `).join('');
+    debugger
+    const isVertical = template.layout === 'Vertical';
+    const columns = setting.pageType === 'A3' ? (isVertical ? 3 : 3) : (isVertical ? 5 : 2);
+    const rows = setting.pageType === 'A3' ? (isVertical ? 6 : 6) : (isVertical ? 2 : 5);
 
     const printHtml = `
       <html>
         <head>
           <style>
             @page {
-              size: ${setting.pageType};
+              size: ${setting.pageType} ${setting.Layout};
               margin: ${setting.Margin}mm;
             }
             body {
               margin: 0;
               display: grid;
-              grid-template-columns: repeat(${setting.pageType == 'A3' ? 3 : 2}, 1fr);
-              grid-template-rows: repeat(${setting.pageType == 'A3' ? 6 : 5}, 1fr);
+              grid-template-columns: repeat(${columns}, 1fr);
+              grid-template-rows: repeat(${rows}, 1fr);
               gap: 10px;
               height: 100%;
               box-sizing: border-box;
@@ -235,6 +243,7 @@ const StudentList = () => {
         </body>
       </html>
     `;
+
 
     const printWindow = window.open('', '_blank');
     printWindow.document.write(printHtml);
@@ -302,7 +311,7 @@ const StudentList = () => {
           <Button type="primary" onClick={async () => await fetchStudents()}>Fetch Students</Button>
         </div>
 
-        {students.length > 0 && <div style={{ display: 'flex', gap: '10px'}}>
+        {students.length > 0 && <div style={{ display: 'flex', gap: '10px' }}>
           <Button type="primary" onClick={() => setopenTemplates(true)}>Select Template</Button>
 
           <Button type='primary' onClick={() => setOpen(true)} >Page Settings</Button>

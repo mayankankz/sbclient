@@ -29,7 +29,7 @@ import {
   DropdownItem,
 } from "reactstrap";
 import { ToastContainer, toast } from "react-toastify";
-
+import './header.css'
 import {
   addToCart,
   removeCartItem,
@@ -181,7 +181,7 @@ function Header() {
             <Row className="row">
               {/* <!--menu start--> */}
               <Col className="col">
-                <Nav className="navbar navbar-expand-lg p-4 shadow bg-white">
+                <Nav className="navbar navbar-expand-lg p-4 shadow glass" >
                   <NavbarBrand href="/" className="navbar-brand logo">
                     <img height={80} width={80} src={logo} alt="" />
                   </NavbarBrand>
@@ -235,7 +235,7 @@ function Header() {
                       {!isMobile && (
                         <div
                           style={{ cursor: "pointer" }}
-                          className="ms-2 togglerCanvas d-inline-block border-0 px-2 py-1 bg-white shadow"
+                          className="ms-2 togglerCanvas d-inline-block border-0 px-2 py-1 shadow"
                           onClick={toggle}
                         >
                           <i className="bi bi-list-nested fs-3 text-dark"></i>
