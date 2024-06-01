@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Select, Table, Button, Form, Input, InputNumber, Row, Modal } from 'antd';
+import { Select, Table, Button, Form, Input, InputNumber, Row, Modal, Spin } from 'antd';
 import { getAllSchool, getAllStudentBySchool } from '../../service/student';
 import { getAllTemplate } from '../../service/idcard';
 import IDcard from '../../Components/IDCARD/IDcard';
@@ -7,6 +7,7 @@ import ReactDOMServer from 'react-dom/server';
 import ModalPopup from '../../Components/Modal/Modal';
 import { Col, Container } from 'reactstrap';
 import { toast } from 'react-toastify';
+import Loader from '../../Components/Loader/Loader';
 const { Option } = Select;
 
 const StudentList = () => {
@@ -42,6 +43,8 @@ const StudentList = () => {
     Margin: '3'
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+
   const [filters, setFilters] = useState({
     school: '',
     class: '',
@@ -88,19 +91,26 @@ const StudentList = () => {
     }
   
       try {
+        setLoadingStudents(true);
         const response = await getAllStudentBySchool(filters.school, filters.class);
         const studentsData = response.students;
         setStudents(studentsData);
         debugger
-        setColums(JSON.parse(JSON.parse(response.colums[0].validationoptions)).map((option) => {
+        setColums(JSON.parse(response.colums[0].validationoptions).map((option) => {
           return {
             title: option,
             dataIndex: option,
             key: option,
           }
         }));
+        setLoadingStudents(false);
       } catch (error) {
         console.error('Error:', error);
+        setLoadingStudents(false);
+
+      } finally{
+        setLoadingStudents(false);
+
       }
     
   };
@@ -119,7 +129,7 @@ const StudentList = () => {
 
   const handlePrintAllIDCards = () => {
     if (!selectedTemplate) {
-      Toast.error('Please select a template.');
+      toast.error('Please select a template.');
       return;
     }
 
@@ -279,6 +289,10 @@ const StudentList = () => {
 
   const selected_template = templates.find(tpl => tpl.id === selectedTemplate);
 
+  if(isLoading){
+    return <Loader />
+  }
+
   return (
     <div style={{ padding: '20px' }}>
       <h3>Student List</h3>
@@ -389,7 +403,7 @@ const StudentList = () => {
           </Modal>
         </div>}
       </div>
-      <Table dataSource={filteredStudents} columns={columns.concat(actionColumns)} rowKey="id" pagination={true} size='small' />
+      {loadingStudents ? <Loader /> :<Table dataSource={filteredStudents} columns={columns.concat(actionColumns)} rowKey="id" pagination={true} size='small' />}
     </div>
   );
 };

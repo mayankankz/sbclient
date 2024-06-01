@@ -12,9 +12,12 @@ const portFolioSlice = createSlice({
     setSelectedPortFolio(state, action) {
       state.selectedPortFolio = action.payload;
     },
+    logout(state,action){
+      state = undefined;
+    }
   },
 });
 
-export const { setSelectedPortFolio } = portFolioSlice.actions;
+export const { setSelectedPortFolio ,logout} = portFolioSlice.actions;
 
 export default portFolioSlice.reducer;

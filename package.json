@@ -30,6 +30,7 @@
     "react-dom": "^18.2.0",
     "react-draggable": "^4.4.6",
     "react-icons": "^4.8.0",
+    "react-loader-spinner": "^6.1.6",
     "react-modal": "^3.16.1",
     "react-modal-video": "^2.0.0",
     "react-owl-carousel": "^2.3.3",

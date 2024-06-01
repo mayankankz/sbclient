@@ -8,7 +8,11 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Breadcrumb, Layout, Menu, theme, ConfigProvider } from 'antd';
+import { Breadcrumb, Layout, Menu, theme, ConfigProvider, Button, Tooltip } from 'antd';
+import { LogoutOutlined } from '@mui/icons-material';
+import { logout } from '../../store/reducer/portFolioReducer';
+import { useDispatch } from 'react-redux';
+import { persistor } from '../../main';
 
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -56,7 +60,15 @@ const AdminLayout = () => {
       },
     },
   };
-  const location = useLocation();
+  let { pathname } = useLocation();
+  pathname = pathname.replace("/", "");
+  const dispatch = useDispatch();
+  function handleLogout() {
+    localStorage.removeItem('auth');
+    dispatch(logout())
+    persistor.purge()
+
+  }
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#EB3E35' } }}>
       <Layout style={{ minHeight: '100vh' }}>
@@ -70,7 +82,23 @@ const AdminLayout = () => {
           <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
         </Sider>
         <Layout>
-          <Content style={{ padding: '20px' } }>
+          <Header style={{ padding: 0, background: colorBgContainer,textAlign: 'end' }}>
+            
+            <Tooltip title="Logout">
+              <Button style={{
+                fontSize: '16px',
+                width: 40,
+                height: 40,
+                marginRight: 30
+              }} 
+              shape="circle"
+              icon={<LogoutOutlined />}
+              onClick={handleLogout}
+              />
+            </Tooltip>
+
+          </Header>
+          <Content style={{ padding: '20px' }}>
             <Outlet />
           </Content>
         </Layout>

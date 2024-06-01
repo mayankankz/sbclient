@@ -29,7 +29,7 @@ const store = configureStore({
 });
 
 // Create the persisted store
-const persistor = persistStore(store);
+export const persistor = persistStore(store);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
