@@ -32,7 +32,7 @@ const TeamMembers = ({ teamMembers }) => {
               </h6>
               <span className="text-muted">{member.position}</span>
             </div>
-            <div className="mt-3 mb-4">
+            {/* <div className="mt-3 mb-4">
               <CardImg
                 top
                 width="100%"
@@ -40,7 +40,7 @@ const TeamMembers = ({ teamMembers }) => {
                 alt={member.name}
                 className="img-fluid rounded-4"
               />
-            </div>
+      </div>*/}
             <ul className="list-inline mb-0">
               {member.socialMedia.map((media) => (
                 <li className="list-inline-item" key={media.icon}>

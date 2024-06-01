@@ -6,6 +6,7 @@ import IDcard from '../../Components/IDCARD/IDcard';
 import ReactDOMServer from 'react-dom/server';
 import ModalPopup from '../../Components/Modal/Modal';
 import { Col, Container } from 'reactstrap';
+import { toast } from 'react-toastify';
 const { Option } = Select;
 
 const StudentList = () => {
@@ -81,7 +82,11 @@ const StudentList = () => {
   }, []);
 
   const fetchStudents = async () => {
-    if (filters.school) {
+    if(!filters.school || !filters.class){
+      toast.error('Please select a school and class.')
+      return;
+    }
+  
       try {
         const response = await getAllStudentBySchool(filters.school, filters.class);
         const studentsData = response.students;
@@ -97,11 +102,7 @@ const StudentList = () => {
       } catch (error) {
         console.error('Error:', error);
       }
-    } else {
-      setStudents([]);
-      setClasses([]);
-      setSections([]);
-    }
+    
   };
 
   const handleFilterChange = (filterName, filterValue) => {
@@ -118,7 +119,7 @@ const StudentList = () => {
 
   const handlePrintAllIDCards = () => {
     if (!selectedTemplate) {
-      alert('Please select a template.');
+      Toast.error('Please select a template.');
       return;
     }
 
@@ -187,7 +188,7 @@ const StudentList = () => {
 
   const handlePrintIDCards = (id) => {
     if (!selectedTemplate) {
-      alert('Please select a template.');
+      toast.error('Please select a template.');
       return;
     }
 

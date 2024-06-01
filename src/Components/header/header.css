@@ -1,5 +1,5 @@
 .glass  {
-    background: rgba( 8, 1, 1, 0.4 );
+    background: rgba(253, 253, 253, 0.8);
     box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
     backdrop-filter: blur( 2.5px );
     -webkit-backdrop-filter: blur( 2.5px );
@@ -7,10 +7,6 @@
 }
 
 .headerglass{
-
-    background: rgba( 204, 204, 204, 0.4 );
-    box-shadow: 0 8px 32px 0 rgba( 31, 38, 135, 0.37 );
-    backdrop-filter: blur( 2.5px );
-    -webkit-backdrop-filter: blur( 2.5px );
-    border-radius: 10px;
+    background: rgb(2,0,36);
+    background: linear-gradient(180deg, rgba(2,0,36,1) 0%, rgba(255,114,114,0.6896008403361344) 18%, rgba(255,255,255,0.22461484593837533) 100%, rgba(36,66,73,0.2) 100%);
 }

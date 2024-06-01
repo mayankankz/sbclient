@@ -13,6 +13,7 @@ import GuideLines from '../../../Components/GuildeLines/GuildLines';
 import uniqid from 'uniqid';
 import { addTemplate, getAllTemplate } from '../../../service/idcard';
 import IDcard from '../../../Components/IDCARD/IDcard';
+import { toast } from 'react-toastify';
 
 const Editor = () => {
   const [elements, setElements] = useState([]);
@@ -30,6 +31,13 @@ const Editor = () => {
   const contentToPrint = useRef(null);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, elementId: null });
   const [guideLines, setGuideLines] = useState([]);
+
+  function resetAll(){
+    setElements([]);
+    setSelectedElementId(null);
+    setStyles({});
+    
+  }
 
   const handlePrint = useReactToPrint({
     documentTitle: "Print This Document",
@@ -125,7 +133,7 @@ const Editor = () => {
       content: type === 'label' ? 'Label Element' : type === 'input' ? 'Input Element' : type === 'image' ? 'https://via.placeholder.com/150' : '',
       position: { x: 0, y: 0 },
       size: { width: 100, height: 10 },
-      styles: {},
+      styles: {fontSize: '10px'},
       zIndex: elements.length,
       fieldMapping: ''
     };
@@ -343,11 +351,11 @@ const Editor = () => {
     };
 
     try {
-
       const response = await  addTemplate(templateData);
-      alert("template saved successfully")
-      console.log(response)
+      resetAll();
+      toast.success('Template saved successfully.')
     } catch (error) {
+      toast.error('Something went wrong.')
       console.error('Error:', error);
     }
   };
@@ -468,7 +476,7 @@ const Editor = () => {
                   size={{ width: el.size.width, height: el.size.height }}
                   onResizeStart={handleStop}
                   onResizeStop={handleResize(index)}
-                  minWidth={50}
+                  minWidth={40}
                   minHeight={15}
                   bounds={'parent'}
                   grid={[1, 1]}
@@ -658,14 +666,14 @@ const Editor = () => {
           }
         </ModalBody>
       </Modal>
-      <div className="template-list" style={{ marginLeft: '20px' }}>
+      {/* <div className="template-list" style={{ marginLeft: '20px' }}>
         <h3>Saved Templates</h3>
         {templates.map(template => (
         <div key={template.id} className="template-item">
           <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
         </div>
       ))}
-      </div>
+    </div> */}
 
       {contextMenu.visible && (
         <ContextMenu

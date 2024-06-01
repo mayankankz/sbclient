@@ -26,7 +26,7 @@ function HeroBanner2() {
 
   return (
     <div>
-      <section className="px-lg-10 pb-0 pt-5">
+      <section className="px-lg-10 pb-0 pt-5 ">
         <div className="overflow-hidden position-relative bg-light-3 z-index-1 rounded-4 py-10">
           <Container className="z-index-1">
             <Row className="align-items-center">

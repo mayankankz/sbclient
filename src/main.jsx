@@ -9,7 +9,8 @@ import { PersistGate } from "redux-persist/integration/react"; // Import Persist
 import { persistStore, persistReducer } from "redux-persist"; // Import persistStore and persistReducer
 import storage from "redux-persist/lib/storage"; // Import the storage option
 import rootReducer from "./store/reducer/rootReducer";
-
+import { ToastContainer, toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
 // const store = configureStore({
 //   reducer: rootReducer,
 // });
@@ -37,6 +38,7 @@ root.render(
       <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
           <App />
+          
         </BrowserRouter>
       </PersistGate>
     </Provider>

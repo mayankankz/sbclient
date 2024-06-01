@@ -11,7 +11,7 @@ import {
   ListGroupItem,
 } from "reactstrap";
 import LottiePlayer from "../player";
-
+import logo from '../../assets/img/1.png'
 function Footer() {
   const navigate = useNavigate();
   const socialMedia = [
@@ -28,7 +28,7 @@ function Footer() {
           <Row>
             <Col md={12} lg={4} className="pe-lg-7">
               <Link className="footer-logo" to="index">
-                <img className="img-fluid" src="images/logo.png" alt="" />
+                <img className="img-fluid h-25 w-25" src={logo} alt="" />
               </Link>
               <p className="my-4">
               SB ONLINE SERVICES, we transform your digital experience with custom mobile apps, cutting-edge security systems, seamless networking solutions, and more. Join us to elevate your business to new heights with our comprehensive tech services.
@@ -92,8 +92,8 @@ function Footer() {
             </Col>
             <Col md={8} lg={4} className="mt-6 mt-lg-0">
               <h5 className="mb-4">Our Address</h5>
-              <div className="mb-3 text-muted" style={{ fontSize: "16px" }}>
-              Gadarwara, Hospital Road, Narsinghpur-487551, Madhya Pradesh, India.{" "}
+              <div className="mb-3 text-black" style={{ fontSize: "16px" }}>
+              Hospital Road, Gadarwara, Narsinghpur-487551, Madhya Pradesh, India.{" "}
               </div>
 
               <ul horizontal className="list-inline  mb-3">

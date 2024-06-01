@@ -50,6 +50,7 @@ import DashBoard from "./Pages/adminDashboard/Dashbaord/DashBoard";
 import AdminLayout from "./Pages/adminDashboard/Layout";
 import Portfolio from "./Components/portfolio/Protfolio";
 import StudentList from "./Pages/adminDashboard/studentList";
+import PrivateRoute from "./Pages/adminDashboard/PrivateRoutes";
 function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
@@ -90,14 +91,13 @@ function App() {
     <>
       <ToastContainer
         position="top-right"
-        autoClose={5000}
+        autoClose={1500}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
         rtl={false}
         pauseOnFocusLoss
         draggable
-        pauseOnHover
         theme="light"
       />
       {isLoading ? (
@@ -160,7 +160,9 @@ function App() {
                 <Route path="/terms-and-conditions" element={<TAndC />} />
                 <Route path="/privacy-policy" element={<Privacy />} />
 
-                <Route path="/admin/*" element={<AdminLayout />}>
+                <Route path="/admin/*" element={<PrivateRoute>
+                  <AdminLayout />
+                </PrivateRoute>}>
                 
                   <Route index element={<DashBoard />} />
                   <Route path="editor" element={<Editor />} />

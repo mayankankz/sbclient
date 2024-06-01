@@ -1,25 +1,60 @@
-import React from "react";
-import Page_Heading from "../../Components/page-heading/Page_Heading";
+import React, { useState } from "react";
 import { Col, Container, Row } from "reactstrap";
 import { Form, FormGroup, Input, Label, Button } from "reactstrap";
-import { Link } from "react-router-dom";
-import Contact from "../../Components/contact/Contact";
+
 import LottiePlayer from "../../Components/player";
+import { apiUrl } from "../../utils/constant";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 function SignIn() {
-  const firstBreadcrumb = { label: "Pages", link: "/index" };
-  const secondBreadcrumb = {
-    label: "Sign In",
-    link: "/login",
-    active: true,
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
-  };
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    debugger;
+    const data = new FormData(event.currentTarget);
+    let username = data.get("username");
+    let password = data.get("password");
+
+    if (!username.trim() || !password.trim()) {
+      toast.error("Username and password required.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const user = await axios
+        .post(`${apiUrl}/auth/login`, { username, password })
+        .then((response) => {
+          console.log(response.data.userDetails.isAdmin);
+
+          if (response.data.userDetails.isAdmin) {
+            setLoading(false);
+            localStorage.setItem('auth', true);
+            navigate("/admin/");
+          } else {
+            setLoading(false);
+            toast.error('You are not allowed to access this.')
+          }
+        })
+        .catch((error) => {
+          toast.error(error.response.data.Error);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="page-wrapper">
-      
       <div className="page-content">
         <section>
           <Container>
@@ -28,14 +63,17 @@ function SignIn() {
                 <LottiePlayer src="https://lottie.host/cbbc0c83-044c-4cf0-ba2e-54438fcbafd8/6M8MI7snvI.json" />
               </Col>
               <Col lg={5} xs={12} className="mt-5">
-                <div className="border border-light rounded-4 p-5">
+                <div
+                  className="border border-light rounded-4 p-5"
+                  style={{ boxShadow: "rgba(0, 0, 0, 0.8) 0px 5px 15px" }}
+                >
                   <h2 className="mb-5">Login Your Account</h2>
                   <Form id="contact-form" onSubmit={handleSubmit}>
                     <div className="messages"></div>
                     <FormGroup>
                       <Input
                         type="text"
-                        name="name"
+                        name="username"
                         id="form_name"
                         placeholder="User name"
                         required
@@ -50,38 +88,14 @@ function SignIn() {
                         required
                       />
                     </FormGroup>
-                    <div className="mt-4 mb-5">
-                      <div className="remember-checkbox d-flex align-items-center justify-content-between">
-                        <div className="form-check">
-                          <Input
-                            className="form-check-input"
-                            type="checkbox"
-                            value=""
-                            id="check1"
-                          />
-                          <Label className="form-check-label" htmlFor="check1">
-                            Remember me
-                          </Label>
-                        </div>
-                        <Link className="btn-link" to="/forgot-password">
-                          Forgot Password?
-                        </Link>
-                      </div>
-                    </div>
+
                     <Button color="primary">Login Now</Button>
                   </Form>
-                  <div className="d-flex align-items-center mt-4">
-                    <span className="text-muted me-1">
-                      Don't have an account?
-                    </span>
-                    <Link to="/signup">Sign Up</Link>
-                  </div>
                 </div>
               </Col>
             </Row>
           </Container>
         </section>
-       
       </div>
     </div>
   );
