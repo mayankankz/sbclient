@@ -1,42 +1,87 @@
-import React, { useEffect, useRef, useState } from 'react';
-import Draggable from 'react-draggable';
-import { Resizable } from 're-resizable';
-import 'react-resizable/css/styles.css';
-import { CloseOutlined, DragIndicator } from '@mui/icons-material';
-import { Button, ButtonGroup, Label, Modal, ModalBody, ModalHeader, Offcanvas, OffcanvasBody, OffcanvasHeader } from 'reactstrap';
-import './editor.css';
+import React, { useEffect, useRef, useState } from "react";
+import Draggable from "react-draggable";
+import { Resizable } from "re-resizable";
+import "react-resizable/css/styles.css";
+import {
+  CancelOutlined,
+  CloseOutlined,
+  DragIndicator,
+  UploadOutlined,
+} from "@mui/icons-material";
+import {
+  Button,
+  ButtonGroup,
+  Container,
+  FormGroup,
+  Label,
+  Modal,
+  ModalBody,
+  ModalHeader,
+  Offcanvas,
+  OffcanvasBody,
+  OffcanvasHeader,
+} from "reactstrap";
+import "./editor.css";
 import { TfiHandDrag } from "react-icons/tfi";
-import ResizeHandle from '../../../Components/ResizeHandle';
-import { useReactToPrint } from 'react-to-print';
-import ContextMenu from '../../../Components/ContexctMenu';
-import GuideLines from '../../../Components/GuildeLines/GuildLines';
-import uniqid from 'uniqid';
-import { addTemplate, getAllTemplate } from '../../../service/idcard';
-import IDcard from '../../../Components/IDCARD/IDcard';
-import { toast } from 'react-toastify';
-
+import ResizeHandle from "../../../Components/ResizeHandle";
+import { useReactToPrint } from "react-to-print";
+import ContextMenu from "../../../Components/ContexctMenu";
+import GuideLines from "../../../Components/GuildeLines/GuildLines";
+import uniqid from "uniqid";
+import { addTemplate, getAllTemplate } from "../../../service/idcard";
+import IDcard from "../../../Components/IDCARD/IDcard";
+import { toast } from "react-toastify";
+import preview from "../../../assets/images/demo/user.jpeg";
+import { Input, Upload } from "antd";
+import Styler from "../../../Components/Styler/Styler";
+import { Button as AntdButton } from "antd";
+import ImageUploadModal from "../../../Components/Modal/ImageUpload";
+import { BsUpload } from "react-icons/bs";
 const Editor = () => {
   const [elements, setElements] = useState([]);
-  const [selectedElementId, setSelectedElementId] = useState(null);
+  const [selectedElementId, setSelectedElementId] = useState([]);
   const [styles, setStyles] = useState({});
   const [templates, setTemplates] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [layout, setLayout] = useState('Horizontal');
-  const [workspaceDimensions, setWorkspaceDimensions] = useState({ width: 87, height: 55 });
+  const [layout, setLayout] = useState("Horizontal");
+  const [workspaceDimensions, setWorkspaceDimensions] = useState({
+    width: 87,
+    height: 55,
+  });
   const [backgroundImage, setBackgroundImage] = useState(null);
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [flag, setFlag] = useState(true)
-  const availableFields = ['studentname', 'fathersname', 'mothersname','class','address','mobilenumber','schoolname','session','studentidno','aadhar','dob','section','housename'];
+  const [flag, setFlag] = useState(true);
+  const availableFields = [
+    "studentname",
+    "fathersname",
+    "mothersname",
+    "class",
+    "address",
+    "mobilenumber",
+    "schoolname",
+    "session",
+    "studentidno",
+    "aadhar",
+    "dob",
+    "section",
+    "housename",
+  ];
   const contentToPrint = useRef(null);
-  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, elementId: null });
+  const [isUploadOpen,setIsUploadOpen] = useState(false)
+  const [contextMenu, setContextMenu] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    elementId: null,
+  });
   const [guideLines, setGuideLines] = useState([]);
-
-  function resetAll(){
+  const toggleModal = () => setIsUploadOpen(!isUploadOpen);
+  function resetAll() {
     setElements([]);
-    setSelectedElementId(null);
+    setSelectedElementId([]);
     setStyles({});
-    
+    setBackgroundImage(null);
   }
 
   const handlePrint = useReactToPrint({
@@ -55,48 +100,63 @@ const Editor = () => {
       visible: true,
       x: event.clientX,
       y: event.clientY,
-      elementId
+      elementId,
     });
   };
 
   const handleContextMenuAction = (action) => {
     if (contextMenu.elementId !== null) {
       switch (action) {
-        case 'delete':
+        case "delete":
           removeElement(contextMenu.elementId);
           break;
-        case 'bringForward':
+        case "bringForward":
           setElements((prevElements) => {
             const newElements = [...prevElements];
-            const index = newElements.findIndex(el => el.id === contextMenu.elementId);
+            const index = newElements.findIndex(
+              (el) => el.id === contextMenu.elementId
+            );
             if (index >= 0) {
-              newElements[index]['zIndex'] += 1;
+              newElements[index]["zIndex"] += 1;
             }
             return newElements;
           });
           break;
-        case 'sendBackward':
+        case "sendBackward":
           setElements((prevElements) => {
             const newElements = [...prevElements];
-            const index = newElements.findIndex(el => el.id === contextMenu.elementId);
+            const index = newElements.findIndex(
+              (el) => el.id === contextMenu.elementId
+            );
             if (index >= 0) {
-              newElements[index]['zIndex'] -= 1;
+              newElements[index]["zIndex"] -= 1;
             }
             return newElements;
           });
           break;
-        case 'duplicate':
+        case "duplicate":
           duplicateElement(contextMenu.elementId);
           break;
-        case 'settings':
+        case "settings":
           const elem = [...elements];
-          const index = elem.findIndex(el => el.id === contextMenu.elementId);
+          const index = elem.findIndex((el) => el.id === contextMenu.elementId);
           if (index >= 0) {
-            setSelectedElementId(contextMenu.elementId)
+            setSelectedElementId(contextMenu.elementId);
             toggleOff();
-            setStyles(elem[index]['styles']);
+            setStyles(elem[index]["styles"]);
           }
-
+          break;
+        case "alignLeft":
+          alignElements("left");
+          break;
+        case "alignRight":
+          alignElements("right");
+          break;
+        case "alignTop":
+          alignElements("top");
+          break;
+        case "alignBottom":
+          alignElements("bottom");
           break;
         default:
           break;
@@ -105,48 +165,131 @@ const Editor = () => {
     setContextMenu({ visible: false, x: 0, y: 0, elementId: null });
   };
 
+  const alignElements = (alignment) => {
+    const selectedElements = elements.filter((el) =>
+      selectedElementId.includes(el.id)
+    );
+
+    debugger;
+    if (selectedElements.length < 2) {
+      toast.error("Please select at least 2 element.");
+      return;
+    }
+    if (selectedElements.length > 0) {
+      let referenceCoordinate;
+
+      switch (alignment) {
+        case "left":
+          referenceCoordinate = Math.min(
+            ...selectedElements.map((el) => el.position.x)
+          );
+          break;
+        case "right":
+          referenceCoordinate = Math.max(
+            ...selectedElements.map((el) => el.position.x + el.size.width)
+          );
+          break;
+        case "top":
+          referenceCoordinate = Math.min(
+            ...selectedElements.map((el) => el.position.y)
+          );
+          break;
+        case "bottom":
+          referenceCoordinate = Math.max(
+            ...selectedElements.map((el) => el.position.y + el.size.height)
+          );
+          break;
+        default:
+          break;
+      }
+
+      const updatedElements = elements.map((el) => {
+        if (selectedElementId.includes(el.id)) {
+          const updatedPosition = { ...el.position };
+          switch (alignment) {
+            case "left":
+              updatedPosition.x = referenceCoordinate;
+              break;
+            case "right":
+              updatedPosition.x = referenceCoordinate - el.size.width;
+              break;
+            case "top":
+              updatedPosition.y = referenceCoordinate;
+              break;
+            case "bottom":
+              updatedPosition.y = referenceCoordinate - el.size.height;
+              break;
+            default:
+              break;
+          }
+          return { ...el, position: updatedPosition };
+        }
+        return el;
+      });
+
+      setElements(updatedElements);
+      setSelectedElementId([]);
+      setGuideLines([]);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (contextMenu.visible && !event.target.closest('.context-menu')) {
+      if (contextMenu.visible && !event.target.closest(".context-menu")) {
         setContextMenu({ visible: false, x: 0, y: 0, elementId: null });
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
     return () => {
-      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
   }, [contextMenu]);
 
   useEffect(() => {
-    if (layout === 'Horizontal') {
+    if (layout === "Horizontal") {
       setWorkspaceDimensions({ width: 87, height: 55 });
     } else {
       setWorkspaceDimensions({ width: 55, height: 87 });
     }
   }, [layout]);
 
-  const addElement = (type) => {
+  const addElement = (type,imgURl="") => {
     const newElement = {
       id: uniqid(),
       type,
-      content: type === 'label' ? 'Label Element' : type === 'input' ? 'Input Element' : type === 'image' ? 'https://via.placeholder.com/150' : '',
+      content:
+        type === "label"
+          ? "Label Element"
+          : type === "input"
+          ? "Input Element"
+          : type === "image"
+          ? preview
+          : "",
       position: { x: 0, y: 0 },
-      size: { width: 100, height: 10 },
-      styles: {fontSize: '10px'},
+      imgURl:imgURl,
+      size: {
+        width: type === "image" ? 50 : 100,
+        height: type === "image" ? 50 : 10,
+      },
+      parentStyle: {},
+      styles: { fontSize: "10px" },
       zIndex: elements.length,
-      fieldMapping: ''
+      fieldMapping: "",
     };
     setElements([...elements, newElement]);
   };
 
   const duplicateElement = (id) => {
-    const elementToDuplicate = elements.find(el => el.id === id);
+    const elementToDuplicate = elements.find((el) => el.id === id);
     if (elementToDuplicate) {
       const newElement = {
         ...elementToDuplicate,
         id: uniqid(), // Generate new id
-        position: { x: elementToDuplicate.position.x + 10, y: elementToDuplicate.position.y + 10 }, // Offset position
+        position: {
+          x: elementToDuplicate.position.x + 10,
+          y: elementToDuplicate.position.y + 10,
+        }, // Offset position
         zIndex: elements.length,
       };
       setElements([...elements, newElement]);
@@ -156,26 +299,27 @@ const Editor = () => {
   const removeElement = (id) => {
     setElements(elements.filter((el) => el.id !== id));
     if (selectedElementId === id) {
-      setSelectedElementId(null);
+      setSelectedElementId([]);
       setStyles({});
     }
   };
 
-  const handleDrag = (index) => (e, { x, y }) => {
-    const newElements = [...elements];
-    const draggedElement = { ...newElements[index], position: { x, y } };
-    const snapPosition = calculateGuideLines(draggedElement, 'drag');
+  const handleDrag =
+    (index) =>
+    (e, { x, y }) => {
+      debugger;
+      const newElements = [...elements];
+      const draggedElement = { ...newElements[index], position: { x, y } };
+      const snapPosition = calculateGuideLines(draggedElement, "drag");
 
-    newElements[index].position = snapPosition.position;
-    setGuideLines(snapPosition.lines);
-    setElements(newElements);
-  };
+      newElements[index].position = snapPosition.position;
+      setGuideLines(snapPosition.lines);
+      setElements(newElements);
+    };
 
   const handleStop = () => {
     setGuideLines([]);
   };
-
-
 
   const MAGNETIC_THRESHOLD = 5;
 
@@ -184,41 +328,110 @@ const Editor = () => {
     let snapPosition = { x: element.position.x, y: element.position.y };
     let snapSize = { width: element.size.width, height: element.size.height };
 
-    elements.forEach(el => {
+    elements.forEach((el) => {
       if (el.id !== element.id) {
-        if (type === 'drag') {
-          if (Math.abs(el.position.y - element.position.y) < MAGNETIC_THRESHOLD) {
-            lines.push({ type: 'horizontal', position: el.position.y, start: Math.min(el.position.x, element.position.x), end: Math.max(el.position.x + el.size.width, element.position.x + element.size.width) });
+        if (type === "drag") {
+          if (
+            Math.abs(el.position.y - element.position.y) < MAGNETIC_THRESHOLD
+          ) {
+            lines.push({
+              type: "horizontal",
+              position: el.position.y,
+              start: Math.min(el.position.x, element.position.x),
+              end: Math.max(
+                el.position.x + el.size.width,
+                element.position.x + element.size.width
+              ),
+            });
             snapPosition.y = el.position.y;
           }
-          if (Math.abs((el.position.y + el.size.height) - (element.position.y + element.size.height)) < MAGNETIC_THRESHOLD) {
-            lines.push({ type: 'horizontal', position: el.position.y + el.size.height, start: Math.min(el.position.x, element.position.x), end: Math.max(el.position.x + el.size.width, element.position.x + element.size.width) });
-            snapPosition.y = el.position.y + el.size.height - element.size.height;
+          if (
+            Math.abs(
+              el.position.y +
+                el.size.height -
+                (element.position.y + element.size.height)
+            ) < MAGNETIC_THRESHOLD
+          ) {
+            lines.push({
+              type: "horizontal",
+              position: el.position.y + el.size.height,
+              start: Math.min(el.position.x, element.position.x),
+              end: Math.max(
+                el.position.x + el.size.width,
+                element.position.x + element.size.width
+              ),
+            });
+            snapPosition.y =
+              el.position.y + el.size.height - element.size.height;
           }
-          if (Math.abs(el.position.x - element.position.x) < MAGNETIC_THRESHOLD) {
-            lines.push({ type: 'vertical', position: el.position.x, start: Math.min(el.position.y, element.position.y), end: Math.max(el.position.y + el.size.height, element.position.y + element.size.height) });
+          if (
+            Math.abs(el.position.x - element.position.x) < MAGNETIC_THRESHOLD
+          ) {
+            lines.push({
+              type: "vertical",
+              position: el.position.x,
+              start: Math.min(el.position.y, element.position.y),
+              end: Math.max(
+                el.position.y + el.size.height,
+                element.position.y + element.size.height
+              ),
+            });
             snapPosition.x = el.position.x;
           }
-          if (Math.abs((el.position.x + el.size.width) - (element.position.x + element.size.width)) < MAGNETIC_THRESHOLD) {
-            lines.push({ type: 'vertical', position: el.position.x + el.size.width, start: Math.min(el.position.y, element.position.y), end: Math.max(el.position.y + el.size.height, element.position.y + element.size.height) });
+          if (
+            Math.abs(
+              el.position.x +
+                el.size.width -
+                (element.position.x + element.size.width)
+            ) < MAGNETIC_THRESHOLD
+          ) {
+            lines.push({
+              type: "vertical",
+              position: el.position.x + el.size.width,
+              start: Math.min(el.position.y, element.position.y),
+              end: Math.max(
+                el.position.y + el.size.height,
+                element.position.y + element.size.height
+              ),
+            });
             snapPosition.x = el.position.x + el.size.width - element.size.width;
           }
-        } else if (type === 'resize') {
-          if (Math.abs(el.size.height - element.size.height) < MAGNETIC_THRESHOLD) {
-            lines.push({ type: 'horizontal', position: element.position.y + element.size.height, start: Math.min(el.position.x, element.position.x), end: Math.max(el.position.x + el.size.width, element.position.x + element.size.width) });
+        } else if (type === "resize") {
+          if (
+            Math.abs(el.size.height - element.size.height) < MAGNETIC_THRESHOLD
+          ) {
+            lines.push({
+              type: "horizontal",
+              position: element.position.y + element.size.height,
+              start: Math.min(el.position.x, element.position.x),
+              end: Math.max(
+                el.position.x + el.size.width,
+                element.position.x + element.size.width
+              ),
+            });
             snapSize.height = el.size.height;
           }
-          if (Math.abs(el.size.width - element.size.width) < MAGNETIC_THRESHOLD) {
-            lines.push({ type: 'vertical', position: element.position.x + element.size.width, start: Math.min(el.position.y, element.position.y), end: Math.max(el.position.y + el.size.height, element.position.y + element.size.height) });
+          if (
+            Math.abs(el.size.width - element.size.width) < MAGNETIC_THRESHOLD
+          ) {
+            lines.push({
+              type: "vertical",
+              position: element.position.x + element.size.width,
+              start: Math.min(el.position.y, element.position.y),
+              end: Math.max(
+                el.position.y + el.size.height,
+                element.position.y + element.size.height
+              ),
+            });
             snapSize.width = el.size.width;
           }
         }
       }
     });
 
-    if (type === 'drag') {
+    if (type === "drag") {
       return { position: snapPosition, lines };
-    } else if (type === 'resize') {
+    } else if (type === "resize") {
       return { size: snapSize, lines };
     }
   };
@@ -228,48 +441,100 @@ const Editor = () => {
   };
 
   const handleResize = (index) => (e, direction, ref, d) => {
+    debugger;
     const newElements = [...elements];
     const resizedElement = {
       ...newElements[index],
       size: {
         width: newElements[index].size.width + d.width,
-        height: newElements[index].size.height + d.height
-      }
+        height: newElements[index].size.height + d.height,
+      },
     };
-    const snapSize = calculateGuideLines(resizedElement, 'resize');
+    const snapSize = calculateGuideLines(resizedElement, "resize");
 
     newElements[index].size = snapSize.size;
+
     setGuideLines(snapSize.lines);
     setElements(newElements);
   };
 
-
-
   const handleStyleChange = (property, value) => {
     debugger;
-    const newElements = elements.map(el => {
+    const newElements = elements.map((el) => {
       if (el.id === selectedElementId) {
         return {
           ...el,
           styles: {
             ...el.styles,
-            [property]: property === 'borderRadius' ? `${value}%` : `${value}px`
-          }
+            [property]: value,
+          },
+        };
+      }
+      return el;
+    });
+
+    setElements(newElements);
+    setStyles((prevStyles) => ({
+      ...prevStyles,
+      [property]: value,
+    }));
+  };
+
+  function handleMarginChange(margin) {
+
+  }
+
+  const handleParentStyleChange = (property, value) => {
+    debugger;
+  
+    const newElements = elements.map((el) => {
+      debugger
+      if (el.id === selectedElementId) {
+        let xaxis = el.position.x;
+        let yaxis = el.position.y;
+  
+        // Calculate new positions based on the property
+        switch (property) {
+          case "marginLeft":
+            xaxis += parseInt(value.replace("px", ""));
+            break;
+          case "marginRight":
+            xaxis -= parseInt(value.replace("px", ""));
+            break;
+          case "marginTop":
+            yaxis += parseInt(value.replace("px", ""));
+            break;
+          case "marginBottom":
+            yaxis -= parseInt(value.replace("px", ""));
+            break;
+          
+          default:
+            break;
+        }
+  
+        return {
+          ...el,
+          parentStyle: {
+            ...el.parentStyle,
+            [property]: value,
+          },
+          position: { x: xaxis, y: yaxis },
         };
       }
       return el;
     });
   
     setElements(newElements);
-    setStyles(prevStyles => ({
+  
+    setStyles((prevStyles) => ({
       ...prevStyles,
-      [property]: property === 'borderRadius' ? `${value}%` : `${value}px`
+      [property]: value,
     }));
   };
   
 
   const handleContentChange = (content) => {
-    const newElements = elements.map(el => {
+    const newElements = elements.map((el) => {
       if (el.id === selectedElementId) {
         return { ...el, content };
       }
@@ -279,99 +544,45 @@ const Editor = () => {
   };
 
   const handleFieldMappingChange = (fieldMapping) => {
-    const newElements = elements.map(el => {
+    debugger;
+    const newElements = elements.map((el) => {
       if (el.id === selectedElementId) {
-        return { ...el, fieldMapping };
+        return { ...el, fieldMapping, content: fieldMapping };
       }
       return el;
     });
     setElements(newElements);
   };
 
-  const bringForward = () => {
-    if (selectedElementId !== null) {
-      setElements((prevElements) => {
-        const newElements = [...prevElements];
-        const index = newElements.findIndex(el => el.id === selectedElementId);
-        if (index >= 0) {
-          const temp = newElements[index];
-          newElements[index]['zIndex'] = temp['zIndex'] + 1;
-        }
-        return newElements;
-      });
-    }
-  };
-
-  const sendBackward = () => {
-    if (selectedElementId !== null) {
-      setElements((prevElements) => {
-        const newElements = [...prevElements];
-        const index = newElements.findIndex(el => el.id === selectedElementId);
-        if (index >= 0) {
-          const temp = newElements[index];
-          newElements[index]['zIndex'] = temp['zIndex'] - 1;
-        }
-        return newElements;
-      });
-    }
-  };
-
-  const styleOptions = [
-    { label: 'Background Color', property: 'backgroundColor', type: 'color' },
-    { label: 'Font Size', property: 'fontSize', type: 'number' },
-    { label: 'Text Color', property: 'color', type: 'color' },
-    { label: 'Margin', property: 'margin', type: 'number' },
-    { label: 'Border Radius', property: 'borderRadius', type: 'number' }
-  ];
-
-
-
-  // const saveTemplate = () => {
-  //   const templateData = {
-  //     elements: elements.map(el => ({ ...el })),
-  //     layout,
-  //     backgroundImage
-  //   };
-  //   console.log(templateData)
-  //   setTemplates([...templates, { id: uniqid(), elements: JSON.parse(JSON.stringify(elements)) }]);
-  // };
-
-  // const loadTemplate = (templateId) => {
-  //   const template = templates.find(t => t.id === templateId);
-  //   if (template) {
-  //     setElements(JSON.parse(JSON.stringify(template.elements)));
-  //   }
-  // };
-
-  const saveTemplate = async() => {
+  const saveTemplate = async () => {
     const templateData = {
-      elements: elements.map(el => ({ ...el })),
+      elements: elements.map((el) => ({ ...el })),
       layout,
-      backgroundImage
+      backgroundImage,
     };
 
     try {
-      const response = await  addTemplate(templateData);
+      const response = await addTemplate(templateData);
       resetAll();
-      toast.success('Template saved successfully.')
+      toast.success("Template saved successfully.");
     } catch (error) {
-      toast.error('Something went wrong.')
-      console.error('Error:', error);
+      toast.error("Something went wrong.");
+      console.error("Error:", error);
     }
   };
 
   const fetchTemplates = async () => {
     try {
-      const response = await getAllTemplate()
-      const data = await response
+      const response = await getAllTemplate();
+      const data = await response;
       setTemplates(data);
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   };
 
   const loadTemplate = (templateId) => {
-    const template = templates.find(t => t.id === templateId);
+    const template = templates.find((t) => t.id === templateId);
     if (template) {
       setElements(JSON.parse(template.elements));
       setLayout(template.layout);
@@ -398,60 +609,183 @@ const Editor = () => {
   }, []);
 
 
+  const handleKeyDown = (event) => {
+    if (selectedElementId.length > 0) {
+      const step = 1;
+      let direction = { x: 0, y: 0 };
+      switch (event.key) {
+        case "ArrowUp":
+          direction.y = -step;
+          break;
+        case "ArrowDown":
+          direction.y = step;
+          break;
+        case "ArrowLeft":
+          direction.x = -step;
+          break;
+        case "ArrowRight":
+          direction.x = step;
+          break;
+        default:
+          return;
+      }
+
+      setElements((prevElements) =>
+        prevElements.map((el) => {
+          if (selectedElementId.includes(el.id)) {
+            return {
+              ...el,
+              position: {
+                x: el.position.x + direction.x,
+                y: el.position.y + direction.y,
+              },
+            };
+          }
+          return el;
+        })
+      );
+    }
+  };
+
+  const handleMarginAdjust = (type,val) => {
+    if (selectedElementId.length > 0) {
+      let direction = { x: 0, y: 0 };
+      switch (type) {
+        case "top":
+          direction.y +=val;
+          break;
+        case "bottom":
+          direction.y -=val;
+          break;
+        case "left":
+          direction.x +=val;
+          break;
+        case "right":
+          direction.x -=val;
+          break;
+        default:
+          return;
+      }
+
+      setElements((prevElements) =>
+        prevElements.map((el) => {
+          if (selectedElementId.includes(el.id)) {
+            return {
+              ...el,
+              position: {
+                x: el.position.x + direction.x,
+                y: el.position.y + direction.y,
+              },
+            };
+          }
+          return el;
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedElementId]);
+
   return (
     <>
       <div className="App h-100 w-100 d-flex align-items-center">
-        <div className="main mb-5" style={{ width: '25%', }}>
+      
+        <div className="main mb-5" style={{ width: "25%" }}>
+        
           <div className="layout mb-5 d-flex flex-column">
             <label htmlFor="">Select Layout</label>
             <ButtonGroup>
-              <Button className='button-17' active={layout === 'Horizontal'} outline onClick={() => setLayout('Horizontal')}>
+              <Button
+                className="button-17"
+                active={layout === "Horizontal"}
+                outline
+                onClick={() => setLayout("Horizontal")}
+              >
                 Horizontal
               </Button>
-              <Button className='button-17' active={layout === 'Vertical'} outline onClick={() => setLayout('Vertical')}>
+              <Button
+                className="button-17"
+                active={layout === "Vertical"}
+                outline
+                onClick={() => setLayout("Vertical")}
+              >
                 Vertical
               </Button>
             </ButtonGroup>
           </div>
           <div className="toolbar">
-            <button className='button-17' onClick={() => addElement('label')}>Add Label</button>
-            <button className='button-17' onClick={() => addElement('input')}>Add Field</button>
-            <button className='button-17' onClick={() => addElement('image')}>Add Image</button>
+            <button className="button-17" onClick={() => addElement("label")}>
+              Add Label
+            </button>
+            <button className="button-17" onClick={() => addElement("input")}>
+              Add Field
+            </button>
+            <button className="button-17" onClick={() => addElement("image")}>
+              Add Image
+            </button>
             {/*<button className='button-17' onClick={() => addElement('box')}>Add Box</button> */}
-            <button className='button-17' onClick={() => setElements([])}>Clear All</button>
-            <button className='button-17' onClick={saveTemplate}>Save Template</button>
-            <button className='button-17' onClick={togglePreview}>Preview</button>
+            <button className="button-17" onClick={() => resetAll()}>
+              Clear All
+            </button>
+            <button className="button-17" onClick={saveTemplate}>
+              Save Template
+            </button>
+            <button className="button-17" onClick={togglePreview}>
+              Preview
+            </button>
+            
+          </div>
+          <div className="row mt-5 "><div className="col-md-12"><button className="button-17 w-100 d-flex gap-2" onClick={toggleModal}><BsUpload size={25} className="mr-5"/> <span>Upload Assets</span></button></div></div>
+          <Container className="col-md-12 mt-5">
+          <FormGroup className="mb-5">
+            <Label for="formFile" className="form-label">
+              Upload Design
+            </Label>
+            <div className="d-flex align-items-center gap-2">
+            <Input
+              type="file"
+              id="formFile"
+              onChange={handleBackgroundImageChange}
+            />
+            <CancelOutlined onClick={() => setBackgroundImage(null)} size={25} />
+            </div>
+            
+          </FormGroup>
           
-          </div>
-          <div className="background-uploader mt-5">
-            {backgroundImage ? (
-              <div >
-
-                <button className='button-17' onClick={() => setBackgroundImage(null)}>Remove Background</button>
-              </div>
-            ) : (
-              <div>
-                <label>Upload Background</label>
-                <input type="file" accept="image/*" onChange={handleBackgroundImageChange} />
-              </div>
-            )}
-          </div>
+        </Container>
+        
         </div>
 
-        <div style={{ width: '75%', height: '100%', display: 'flex', alignItems: 'center', transition: 'margin-right 0.3s ease', marginRight: isOpen ? '20%' : '0' }}>
+        <div
+          style={{
+            width: "75%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            transition: "margin-right 0.3s ease",
+            marginRight: isOpen ? "20%" : "0",
+          }}
+        >
           <div
             className="workspace"
             style={{
-              scale: '2',
+              scale: "2",
               width: `${workspaceDimensions.width}mm`,
               height: `${workspaceDimensions.height}mm`,
-              position: 'relative',
-              backgroundColor: 'white',
-              boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
-              margin: '0 auto',
-              backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              position: "relative",
+              backgroundColor: "white",
+              boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
+              margin: "0 auto",
+              backgroundImage: backgroundImage
+                ? `url(${backgroundImage})`
+                : "none",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
             }}
           >
             {elements.map((el, index) => (
@@ -460,11 +794,9 @@ const Editor = () => {
                 position={el.position}
                 onStop={handleStop}
                 onDrag={handleDrag(index)}
-
                 bounds="parent"
                 grid={[1, 1]}
-                handle='.drag-handle'
-
+                handle=".drag-handle"
               >
                 <Resizable
                   onMouseDownCapture={() => {
@@ -473,18 +805,20 @@ const Editor = () => {
                   onMouseUpCapture={() => {
                     setFlag(false);
                   }}
+                
+                  axis="both"
                   size={{ width: el.size.width, height: el.size.height }}
                   onResizeStart={handleStop}
                   onResizeStop={handleResize(index)}
-                  minWidth={40}
+                  minWidth={5}
                   minHeight={15}
-                  bounds={'parent'}
+                  bounds={"parent"}
                   grid={[1, 1]}
                   style={{
-                    position: 'absolute',
-                    border: '1px solid #ddd',
+                    position: "absolute",
+                    border: "1px solid #ddd",
                     zIndex: el.zIndex,
-                    
+                    ...el.parentStyle,
                   }}
                   handleStyles={{
                     top: {
@@ -502,7 +836,7 @@ const Editor = () => {
                       width: 10,
                       height: 10,
                       boxSizing: "border-box",
-                      zIndex: 1
+                      zIndex: 1,
                     },
                     left: {
                       marginTop: -4,
@@ -519,9 +853,8 @@ const Editor = () => {
                       width: 10,
                       height: 10,
                       boxSizing: "border-box",
-                      zIndex: 1
-                    }
-                    ,
+                      zIndex: 1,
+                    },
                     bottom: {
                       marginTop: -9,
                       marginLeft: -9,
@@ -537,7 +870,7 @@ const Editor = () => {
                       width: 10,
                       height: 10,
                       boxSizing: "border-box",
-                      zIndex: 1
+                      zIndex: 1,
                     },
                     right: {
                       marginTop: -4,
@@ -554,9 +887,8 @@ const Editor = () => {
                       width: 10,
                       height: 10,
                       boxSizing: "border-box",
-                      zIndex: 1
-                    }
-
+                      zIndex: 1,
+                    },
                   }}
                   handleComponent={{
                     topLeft: <ResizeHandle />,
@@ -565,105 +897,148 @@ const Editor = () => {
                     bottomRight: <ResizeHandle />,
                   }}
                   enable={{
-                    top: el.id === selectedElementId,
-                    right: el.id === selectedElementId,
-                    bottom: el.id === selectedElementId,
-                    left: el.id === selectedElementId,
-                    topRight: el.id === selectedElementId,
-                    bottomRight: el.id === selectedElementId,
-                    bottomLeft: el.id === selectedElementId,
-                    topLeft: el.id === selectedElementId
-                  }}
-
-
-                  onDoubleClick={() => {
-                    setSelectedElementId(el.id);
-                    toggleOff();
-                    setStyles(el.styles);
+                    top: selectedElementId?.includes(el.id) ? true : false,
+                    right: selectedElementId?.includes(el.id) ? true : false,
+                    bottom: selectedElementId?.includes(el.id) ? true : false,
+                    left: selectedElementId?.includes(el.id) ? true : false,
+                    topRight: selectedElementId?.includes(el.id) ? true : false,
+                    bottomRight: selectedElementId?.includes(el.id)
+                      ? true
+                      : false,
+                    bottomLeft: selectedElementId?.includes(el.id)
+                      ? true
+                      : false,
+                    topLeft: selectedElementId?.includes(el.id) ? true : false,
                   }}
                   onContextMenu={(e) => handleRightClick(e, el.id)}
                 >
-
-                  <div onClick={() => setSelectedElementId(el.id)} className={`element ${el.type}`} style={{ width: '100%', height: '100%', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-                    {el.id == selectedElementId && <div className="drag-handle" style={{ cursor: 'move', position: 'absolute', bottom: '-20px', right: '50%' }}>
-                      <TfiHandDrag style={{ zIndex: 999 }} />
-                    </div>}
-                    {el.type === 'label' && <div style={{ ...el.styles }}>{el.content}</div>}
-                    {el.type === 'input' && <span style={{ ...el.styles, width: '100%', height: '100%' }}>{el.content}</span>}
-                    {el.type === 'image' && <img src={el.content} alt="img" style={{ ...el.styles, width: '100%', height: '100%' }} />}
-                    {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
+                  <div
+                 
+                    onClick={(event) => {
+                      const idToAdd = el.id;
+                      if (event.shiftKey) {
+                        setSelectedElementId((prev) => [...prev, idToAdd]);
+                      } else {
+                        setSelectedElementId([idToAdd]);
+                      }
+                    }}
+                    className={`element ${el.type}`}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {selectedElementId?.includes(el.id) && (
+                      <div
+                        className="drag-handle"
+                        style={{
+                          cursor: "move",
+                          position: "absolute",
+                          bottom: "-20px",
+                          right: "50%",
+                        }}
+                      >
+                        <TfiHandDrag style={{ zIndex: 999 }} />
+                      </div>
+                    )}
+                    {el.type === "label" && (
+                      <div
+                        style={{ ...el.styles, width: "100%", height: "100%" }}
+                      >
+                        {el.content}
+                      </div>
+                    )}
+                    {el.type === "input" && (
+                      <div
+                        style={{ ...el.styles, width: "100%", height: "100%" }}
+                      >
+                        {el.content}
+                      </div>
+                    )}
+                    {el.type === "image" && (
+                      <img
+                        src={el.imgURl ? el.imgURl :preview}
+                        alt="img"
+                        style={{ ...el.styles, width: "100%", height: "100%" }}
+                      />
+                    )}
+                    {el.type === "box" && (
+                      <div
+                        style={{ ...el.styles, width: "100%", height: "100%" }}
+                      ></div>
+                    )}
                   </div>
                 </Resizable>
               </Draggable>
             ))}
-            <GuideLines lines={guideLines} containerSize={workspaceDimensions} />
-
+            <GuideLines
+              lines={guideLines}
+              containerSize={workspaceDimensions}
+            />
           </div>
         </div>
 
         {selectedElementId !== null && (
-          <Offcanvas isOpen={isOpen} toggle={toggleOff} backdrop={true} direction='end' style={{ width: '22%' }} ref={offcanvasRef}>
+          <Offcanvas
+            isOpen={isOpen}
+            toggle={toggleOff}
+            backdrop={true}
+            direction="end"
+            style={{ width: "22%" }}
+            ref={offcanvasRef}
+          >
             <OffcanvasHeader toggle={toggleOff}>
               <h3>Style Settings</h3>
             </OffcanvasHeader>
             <OffcanvasBody>
-              <div className="style-panel d-flex flex-column justify-content-center gap-4" style={{ marginLeft: '20px' }}>
-                {styleOptions.map(option => (
-                  <div key={option.property} className="style-option">
-                    <label style={{ marginRight: '20px' }}>{option.label}</label>
-                    {option.type === 'color' ? (
-                      <input
-                        type="color"
-                        value={styles[option.property] || ''}
-                        onChange={(e) => handleStyleChange(option.property, e.target.value)}
-                      />
-                    ) : (
-                      <input
-                        type="number"
-                        value={parseInt(styles[option.property], 10) || ''}
-                        onChange={(e) => handleStyleChange(option.property, e.target.value)}
-                      />
-                    )}
-                  </div>
-                ))}
-                {elements.find(el => el.id === selectedElementId)?.type !== 'image' && (
-                  <div className="style-option">
-                    <label>Content</label>
-                    <input
-                      type="text"
-                      value={elements.find(el => el.id === selectedElementId)?.content || ''}
-                      onChange={(e) => handleContentChange(e.target.value)}
-                    />
-                  </div>
-                )}
-                {elements.find(el => el.id === selectedElementId).type === 'input' && <div className="style-option">
-                  <label>Field Mapping</label>
-                  <select
-                    value={elements.find(el => el.id === selectedElementId)?.fieldMapping || ''}
-                    onChange={(e) => handleFieldMappingChange(e.target.value)}
-                  >
-                    <option value="">None</option>
-                    {availableFields.map(field => (
-                      <option key={field} value={field}>{field}</option>
-                    ))}
-                  </select>
-                </div>}
-
-              </div>
+              <Styler
+                styles={styles}
+                handleStyleChange={handleStyleChange}
+                handleParentStyleChange={handleParentStyleChange}
+                elements={elements}
+                selectedElementId={selectedElementId}
+                handleContentChange={handleContentChange}
+                availableFields={availableFields}
+                handleFieldMappingChange={handleFieldMappingChange}
+                handleMarginAdjust={handleMarginAdjust}
+              />
             </OffcanvasBody>
           </Offcanvas>
         )}
       </div>
 
       <Modal isOpen={isPreviewOpen} toggle={togglePreview} size="lg">
-        <ModalHeader toggle={togglePreview}>ID Card Preview  </ModalHeader>
-        <ModalBody ref={contentToPrint} style={{ display: 'grid', gridTemplateRows: 'repeat(2, 1fr)', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }} >
+        <ModalHeader toggle={togglePreview}>ID Card Preview </ModalHeader>
+        <ModalBody
+          ref={contentToPrint}
+          style={{
+            height: "700px",
 
-
-          {
-            Array.from({ length: 10 }).map((_, i) => {
-              return <IDcard size={layout == 'Vertical' ? { width: 55, height: 87 } : { width: 87, height: 55 }} key={i} elements={elements} backgroundImage={backgroundImage} layout={layout} isPreview={true} /> })
-          }
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            style={{
+              scale: "2",
+              boxShadow: "rgba(0, 0, 0, 0.35) 0px 5px 15px",
+            }}
+          >
+            <IDcard
+              size={
+                layout == "Vertical"
+                  ? { width: 55, height: 87 }
+                  : { width: 87, height: 55 }
+              }
+              elements={JSON.stringify(elements)}
+              backgroundImage={backgroundImage}
+              layout={layout}
+              isPreview={true}
+            />
+          </div>
         </ModalBody>
       </Modal>
       {/* <div className="template-list" style={{ marginLeft: '20px' }}>
@@ -679,15 +1054,19 @@ const Editor = () => {
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
-          onDelete={() => handleContextMenuAction('delete')}
-          onBringForward={() => handleContextMenuAction('bringForward')}
-          onSendBackward={() => handleContextMenuAction('sendBackward')}
-          onDuplicate={() => handleContextMenuAction('duplicate')}
-          onSettings={() => handleContextMenuAction('settings')}
+          onDelete={() => handleContextMenuAction("delete")}
+          onBringForward={() => handleContextMenuAction("bringForward")}
+          onSendBackward={() => handleContextMenuAction("sendBackward")}
+          onDuplicate={() => handleContextMenuAction("duplicate")}
+          onSettings={() => handleContextMenuAction("settings")}
+          onAlignLeft={() => handleContextMenuAction("alignLeft")}
+          onAlignRight={() => handleContextMenuAction("alignRight")}
+          onAlignTop={() => handleContextMenuAction("alignTop")}
+          onAlignBottom={() => handleContextMenuAction("alignBottom")}
         />
       )}
 
-     
+      {isUploadOpen && <ImageUploadModal addElement={addElement} isOpen={isUploadOpen} toggle={toggleModal} /> }
     </>
   );
 };

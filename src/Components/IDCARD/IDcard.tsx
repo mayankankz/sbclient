@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import preview from '../../assets/images/demo/user.jpeg'
 const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
   const [workspaceDimensions, setWorkspaceDimensions] = useState(size);
 
@@ -34,12 +34,13 @@ const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
             width: `${el.size.width}px`,
             height: `${el.size.height}px`,
             zIndex: el.zIndex,
-            ...el.styles,
+            
+            ...el.parentStyle,
           }}
         >
           {el.type === 'label' && <span style={{ ...el.styles, whiteSpace: 'nowrap' }}>{getContent(el)}</span>}
           {el.type === 'input' && <span  style={{ ...el.styles, width: '100%', height: '100%' }}>{getContent(el)}</span>}
-          {el.type === 'image' && <img src={data?.img || 'https://via.placeholder.com/150'} alt="img" style={{...el.styles,objectFit:'fill ', width: '100%', height: '100%' }} />}
+          {el.type === 'image' && <img src={el.imgURl ? el.imgURl :data?.img ?data?.img :preview} alt="img" style={{...el.styles,objectFit:'fill ', width: '100%', height: '100%' }} />}
           {el.type === 'box' && <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>}
         </div>
       ))}

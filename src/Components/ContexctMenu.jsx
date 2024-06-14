@@ -1,5 +1,7 @@
 import React from "react";
 import "./menu.css";
+import { TfiAlignJustify, TfiAlignLeft, TfiAlignRight } from "react-icons/tfi";
+import { AlignVerticalBottom, AlignVerticalTop } from "@mui/icons-material";
 const ContextMenu = ({
   x,
   y,
@@ -7,7 +9,11 @@ const ContextMenu = ({
   onBringForward,
   onSendBackward,
   onDuplicate,
-  onSettings
+  onSettings,
+  onAlignLeft,
+  onAlignRight,
+  onAlignTop,
+  onAlignBottom,
 }) => (
   <div
     className="wrapper"
@@ -85,7 +91,35 @@ const ContextMenu = ({
             </li>
           </ul>
         </li>
+        <li className="item share">
+        <div>
+          <TfiAlignJustify />
+          <span>Align</span>
+        </div>
+        <i className="uil uil-angle-right"></i>
+        <ul className="share-menu">
+          <li className="item" onClick={onAlignLeft}>
+            <TfiAlignLeft />
+            <span>Left </span>
+          </li>
+          <li className="item" onClick={onAlignRight}>
+          <TfiAlignRight />
+            <span>Right</span>
+          </li>
+          <li className="item" onClick={onAlignTop}>
+          
+          <AlignVerticalTop />
+
+            <span>Top</span>
+          </li>
+          <li className="item" onClick={onAlignBottom}>
+          <AlignVerticalBottom />
+            <span>Bottom</span>
+          </li>
+        </ul>
+      </li>
       </ul>
+      
       <div className="setting">
         <li className="item" onClick={onSettings}>
           <i className="uil uil-setting"></i>

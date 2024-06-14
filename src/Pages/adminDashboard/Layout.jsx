@@ -7,13 +7,16 @@ import {
   EditOutlined, HomeOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { Breadcrumb, Layout, Menu, theme, ConfigProvider, Button, Tooltip } from 'antd';
+import { Link, Outlet, useLocation, useNavigate, useNavigation } from 'react-router-dom';
+import { Breadcrumb, Layout, Menu, theme, ConfigProvider, Button, Tooltip,Modal } from 'antd';
 import { LogoutOutlined } from '@mui/icons-material';
 import { logout } from '../../store/reducer/portFolioReducer';
 import { useDispatch } from 'react-redux';
 import { persistor } from '../../main';
 
+import { AiFillEdit } from 'react-icons/ai';
+
+const { confirm } = Modal;
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -33,7 +36,7 @@ const items = [
     getItem('Add Student', '3', null, null, '/admin/addstudent'),
     getItem('Generate ID Cards', '4', null, null, '/admin/studentlist'),
     getItem('Check List', '5', null, null, '/admin/checklist'),
-  ], '/admin/user'),
+  ], '/admin/addstudent'),
   getItem('Create School', '9', <HomeOutlined />, null, '/admin/create-school'),
 ];
 
@@ -63,12 +66,36 @@ const AdminLayout = () => {
   let { pathname } = useLocation();
   pathname = pathname.replace("/", "");
   const dispatch = useDispatch();
+  const navigate = useNavigate()
   function handleLogout() {
     localStorage.removeItem('auth');
     dispatch(logout())
     persistor.purge()
-
+    navigate('/login')
   }
+
+  function showConfirm() {
+    confirm({
+     title: 'Do you want to logout?',
+     content:
+       'When clicked the OK button, you will be loggedout after 1 second',
+     async onOk() {
+       try {
+        return new Promise((resolve, reject) => {
+          setTimeout(()=>{
+            handleLogout()
+            resolve()
+          },1000)
+        
+        });
+        
+       } catch (e) {
+         return console.log('Oops errors!');
+       }
+     },
+     onCancel() {},
+   });
+ }
   return (
     <ConfigProvider theme={{ token: { colorPrimary: '#EB3E35' } }}>
       <Layout style={{ minHeight: '100vh' }}>
@@ -93,18 +120,23 @@ const AdminLayout = () => {
               }} 
               shape="circle"
               icon={<LogoutOutlined />}
-              onClick={handleLogout}
+              onClick={showConfirm}
               />
             </Tooltip>
+            
 
           </Header>
           <Content style={{ padding: '20px' }}>
             <Outlet />
           </Content>
+          
         </Layout>
       </Layout>
     </ConfigProvider>
   );
 };
+
+
+
 
 export default AdminLayout;

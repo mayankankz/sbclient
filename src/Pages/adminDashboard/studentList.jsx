@@ -9,6 +9,8 @@ import {
   Row,
   Modal,
   Spin,
+  Tabs,
+  Radio,
 } from "antd";
 import { getAllSchool, getAllStudentBySchool } from "../../service/student";
 import { getAllTemplate } from "../../service/idcard";
@@ -18,6 +20,7 @@ import ModalPopup from "../../Components/Modal/Modal";
 import { Col, Container } from "reactstrap";
 import { toast } from "react-toastify";
 import Loader from "../../Components/Loader/Loader";
+import TabPane from "antd/es/tabs/TabPane";
 const { Option } = Select;
 
 const StudentList = () => {
@@ -42,7 +45,7 @@ const StudentList = () => {
     "12",
   ]);
   const [sections, setSections] = useState([]);
-  const [selectedTemplates, setSelectedTemplates] = useState([1]);
+  const [selectedTemplates, setSelectedTemplates] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [open, setOpen] = useState(false);
@@ -50,7 +53,15 @@ const StudentList = () => {
   const [setting, setSettings] = useState({
     pageType: "A4",
     Layout: "Portrait",
-    Margin: "3",
+    marginTop: 3,
+    marginLeft: 3,
+    marginRight: 3,
+    marginBottom: 3,
+    rowSpacing: 2.6,
+    columnSpacing: 2.6,
+    rows: 0,
+    columns: 0,
+    columnLayout: "row",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
@@ -60,6 +71,30 @@ const StudentList = () => {
     class: "",
     section: "",
   });
+
+  const resetSettings = () => {
+    setSettings({
+      pageType: "A4",
+      Layout: "Portrait",
+      marginTop: 3,
+      marginLeft: 3,
+      marginRight: 3,
+      marginBottom: 3,
+      rowSpacing: 2.6,
+      columnSpacing: 2.6,
+      rows: 0,
+      columns: 0,
+      columnLayout: "row",
+    });
+  };
+
+  const updateRowsAndColumns = (newRows, newColumns) => {
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      rows: newRows,
+      columns: newColumns,
+    }));
+  };
 
   function handleSettingsChange(name, value) {
     debugger;
@@ -111,13 +146,15 @@ const StudentList = () => {
       setStudents(studentsData);
       debugger;
       setColums(
-        JSON.parse(response.colums[0].validationoptions).map((option) => {
-          return {
-            title: option,
-            dataIndex: option,
-            key: option,
-          };
-        })
+        JSON.parse(response.colums[0].validationoptions).map(
+          (option) => {
+            return {
+              title: option,
+              dataIndex: option,
+              key: option,
+            };
+          }
+        )
       );
       setLoadingStudents(false);
     } catch (error) {
@@ -136,19 +173,34 @@ const StudentList = () => {
   };
 
   const handleTemplateChange = (value) => {
-    setSelectedTemplates.push(value);
+    debugger;
+    setSelectedTemplates([value]);
+    const isVertical =
+      templates.filter((tpl) => tpl.id === value)[0].layout === "Vertical";
+    const columns =
+      setting.pageType === "A3" ? (isVertical ? 3 : 3) : isVertical ? 5 : 2;
+    const rows =
+      setting.pageType === "A3" ? (isVertical ? 6 : 6) : isVertical ? 2 : 5;
+    handleSettingsChange("Layout", isVertical ? 'Landscape' : 'Portrait')
+    updateRowsAndColumns(rows, columns);
     setopenTemplates(false);
   };
 
   const handlePrintAllIDCards = () => {
+    if (!selectedTemplates.length) {
+      toast.error("Please select a template.");
+      return;
+    }
     setIsLoading(true);
+
     const idCardsHtml = filteredStudents
       .map((student) => {
         return selectedTemplates
           .map((templateId) => {
             const template = templates.find((tpl) => tpl.id === templateId);
+
             return `
-          <div class="id-card">
+         
             ${ReactDOMServer.renderToStaticMarkup(
               <IDcard
                 size={
@@ -161,13 +213,13 @@ const StudentList = () => {
                 data={student}
               />
             )}
-          </div>
+       
         `;
           })
           .join("");
       })
       .join("");
-
+    debugger;
     const isVertical =
       templates.some((tpl) => tpl.id === selectedTemplates[0]).layout ===
       "Vertical";
@@ -175,24 +227,30 @@ const StudentList = () => {
       setting.pageType === "A3" ? (isVertical ? 3 : 3) : isVertical ? 5 : 2;
     const rows =
       setting.pageType === "A3" ? (isVertical ? 6 : 6) : isVertical ? 2 : 5;
-
+    if (!setting.rows && !setting.columns) {
+      updateRowsAndColumns(rows, columns);
+    }
     const printHtml = `
       <html>
         <head>
           <style>
-            @page {
-              size: ${setting.pageType} ${setting.Layout};
-              margin: ${setting.Margin}mm;
-            }
-            body {
-              margin: 0;
-              display: grid;
-              grid-template-columns: repeat(${columns}, 1fr);
-              grid-template-rows: repeat(${rows}, 1fr);
-              gap: 10px;
-              height: 100%;
-              box-sizing: border-box;
-            }
+          @page {
+            size: ${setting.pageType} ${setting.Layout};
+            margin: ${setting.marginTop}mm ${setting.marginRight}mm ${setting.marginBottom}mm ${setting.marginLeft}mm;
+            box-shadow: none;
+          }
+          body {
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(${setting.columns}, 1fr);
+            grid-template-rows: repeat(${setting.rows}, 1fr);
+            grid-row-gap: ${setting.rowSpacing}mm;
+            grid-column-gap: ${setting.columnSpacing}mm;
+            height: 100%;
+            box-sizing: border-box;
+            grid-auto-flow: ${setting.columnLayout};
+            
+          }
             .id-card {
               width: 100%;
               height: 100%;
@@ -202,7 +260,9 @@ const StudentList = () => {
           </style>
         </head>
         <body>
+        
           ${idCardsHtml}
+         
         </body>
       </html>
     `;
@@ -218,7 +278,7 @@ const StudentList = () => {
   };
 
   const handlePrintIDCards = (id) => {
-    if (!selectedTemplate) {
+    if (!selectedTemplate.length) {
       toast.error("Please select a template.");
       return;
     }
@@ -259,19 +319,22 @@ const StudentList = () => {
       <html>
         <head>
           <style>
-            @page {
-              size: ${setting.pageType} ${setting.Layout};
-              margin: ${setting.Margin}mm;
-            }
-            body {
-              margin: 0;
-              display: grid;
-              grid-template-columns: repeat(${columns}, 1fr);
-              grid-template-rows: repeat(${rows}, 1fr);
-              gap: 10px;
-              height: 100%;
-              box-sizing: border-box;
-            }
+          @page {
+            size: ${setting.pageType} ${setting.Layout};
+            margin: ${setting.marginTop}mm ${setting.marginRight}mm ${setting.marginBottom}mm ${setting.marginLeft}mm;
+          }
+          body {
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(${columns}, 1fr);
+            grid-template-rows: repeat(${rows}, 1fr);
+            grid-row-gap: ${setting.rowSpacing}mm;
+            grid-column-gap: ${setting.columnSpacing}mm;
+            grid-auto-flow: ${setting.columnLayout};
+            height: 100%;
+            box-sizing: border-box;
+           
+          }
             .id-card {
               width: 100%;
               height: 100%;
@@ -393,68 +456,249 @@ const StudentList = () => {
           <div>
             <ModalPopup open={open} setOpen={setOpen} title="Page Settings">
               <Container>
-                <Form
-                  layout="vertical"
-                  name="pageSettings"
-                  initialValues={{
-                    pageType: setting.pageType,
-                    Layout: setting.Layout,
-                    Margin: setting.Margin,
-                  }}
+                <Tabs
+                  defaultActiveKey="1"
+                  onChange={(key) => console.log(key)}
+                  tabBarStyle={{ color: "#8D949C" }}
+                  style={{ width: "100%" }}
                 >
-                  <Form.Item
-                    label="Page Type"
-                    name="pageType"
-                    rules={[
-                      {
-                        required: false,
-                        message: "Please select a page type!",
-                      },
-                    ]}
+                  <TabPane
+                    tab="Page"
+                    key="1"
+                    // style={{ backgroundColor: "red", color: "#000" }}
                   >
-                    <Select
-                      value={setting.pageType}
-                      name="pageType"
-                      onChange={(val) => handleSettingsChange("pageType", val)}
+                    <Form
+                      layout="vertical"
+                      name="pageSettings"
+                      initialValues={{
+                        pageType: setting.pageType,
+                        Layout: setting.Layout,
+                        marginTop: setting.marginTop,
+                        marginLeft: setting.marginLeft,
+                        marginRight: setting.marginRight,
+                        marginBottom: setting.marginBottom,
+                        rowSpacing: setting.rowSpacing,
+                        columnSpacing: setting.columnSpacing,
+                        rows: setting.rows,
+                        columns: setting.columns,
+                      }}
                     >
-                      <Option value="A4">A4</Option>
-                      <Option value="A3">A3</Option>
-                    </Select>
-                  </Form.Item>
+                      <Form.Item
+                        label="Page Type"
+                        name="pageType"
+                        rules={[
+                          {
+                            required: false,
+                            message: "Please select a page type!",
+                          },
+                        ]}
+                      >
+                        <Select
+                          value={setting.pageType}
+                          name="pageType"
+                          onChange={(val) =>
+                            handleSettingsChange("pageType", val)
+                          }
+                        >
+                          <Option value="A4">A4</Option>
+                          <Option value="A3">A3</Option>
+                        </Select>
+                      </Form.Item>
 
-                  <Form.Item
-                    label="Layout"
-                    name="Layout"
-                    rules={[
-                      {
-                        required: false,
-                        message: "Please select a page type!",
-                      },
-                    ]}
-                  >
-                    <Select
-                      value={setting.Layout}
-                      name="Layout"
-                      onChange={(val) => handleSettingsChange("Layout", val)}
+                      <Form.Item
+                        label="Layout"
+                        name="Layout"
+                        rules={[
+                          {
+                            required: false,
+                            message: "Please select a page type!",
+                          },
+                        ]}
+                      >
+                        <Select
+                          value={setting.Layout}
+                          name="Layout"
+                          onChange={(val) =>
+                            handleSettingsChange("Layout", val)
+                          }
+                        >
+                          <Option value="Portrait">Portrait</Option>
+                          <Option value="Landscape">Landscape</Option>
+                        </Select>
+                      </Form.Item>
+                    </Form>
+                  </TabPane>
+
+                  <TabPane tab="Margins" key="2">
+                    <Form
+                      layout="horizontal"
+                      name="pageSettings"
+                      initialValues={{
+                        pageType: setting.pageType,
+                        Layout: setting.Layout,
+                        marginTop: setting.marginTop,
+                        marginLeft: setting.marginLeft,
+                        marginRight: setting.marginRight,
+                        marginBottom: setting.marginBottom,
+                        rowSpacing: setting.rowSpacing,
+                        columnSpacing: setting.columnSpacing,
+                        rows: setting.rows,
+                        columns: setting.columns,
+                      }}
                     >
-                      <Option value="Portrait">Portrait</Option>
-                      <Option value="Landscape">Landscape</Option>
-                    </Select>
-                  </Form.Item>
+                      <Form.Item
+                        label="Top Margin (In mm)"
+                        name="marginTop"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.marginTop}
+                          name="marginTop"
+                          onChange={(val) =>
+                            handleSettingsChange("marginTop", val)
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
 
-                  <Form.Item
-                    label="Margin (In mm)"
-                    name="Margin"
-                    rules={[{ required: false, message: "Please input!" }]}
-                  >
-                    <InputNumber
-                      value={setting.Margin}
-                      name="Margin"
-                      onChange={(val) => handleSettingsChange("Margin", val)}
-                      style={{ width: "100%" }}
-                    />
-                  </Form.Item>
-                </Form>
+                      <Form.Item
+                        label="Left Margin (In mm)"
+                        name="marginLeft"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.marginLeft}
+                          name="marginLeft"
+                          onChange={(val) =>
+                            handleSettingsChange("marginLeft", val)
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label="Right Margin (In mm)"
+                        name="marginRight"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.marginRight}
+                          name="marginRight"
+                          onChange={(val) =>
+                            handleSettingsChange("marginRight", val)
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label="Bottom Margin (In mm)"
+                        name="marginBottom"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.marginBottom}
+                          name="marginBottom"
+                          onChange={(val) =>
+                            handleSettingsChange("marginBottom", val)
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+                    </Form>
+                  </TabPane>
+
+                  <TabPane tab="Columns" key="3">
+                    <Form
+                      layout="vertical"
+                      name="pageSettings"
+                      initialValues={{
+                        pageType: setting.pageType,
+                        Layout: setting.Layout,
+                        marginTop: setting.marginTop,
+                        marginLeft: setting.marginLeft,
+                        marginRight: setting.marginRight,
+                        marginBottom: setting.marginBottom,
+                        rowSpacing: setting.rowSpacing,
+                        columnSpacing: setting.columnSpacing,
+                        rows: setting.rows,
+                        columns: setting.columns,
+                        columnLayout: setting.columnLayout,
+                      }}
+                    >
+                      <Form.Item
+                        label="Columns"
+                        name="columns"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.columns}
+                          name="Columns"
+                          onChange={(val) =>
+                            handleSettingsChange("columns", val)
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label="Column Spacing (In mm)"
+                        name="columnSpacing"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.columnSpacing}
+                          name="columnSpacing"
+                          onChange={(val) =>
+                            handleSettingsChange("columnSpacing", val)
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label="Rows"
+                        name="rows"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.rows}
+                          name="Rows"
+                          onChange={(val) => handleSettingsChange("rows", val)}
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+
+                      <Form.Item
+                        label="Row Spacing (In mm)"
+                        name="rowSpacing"
+                        rules={[{ required: false, message: "Please input!" }]}
+                      >
+                        <InputNumber
+                          value={setting.rowSpacing}
+                          name="rowSpacing"
+                          onChange={(val) =>
+                            handleSettingsChange("rowSpacing", val)
+                          }
+                          style={{ width: "100%" }}
+                        />
+                      </Form.Item>
+                      <Form.Item label="Column Layout">
+                        <Radio.Group
+                          layout="vertical"
+                          value={setting.columnLayout}
+                          onChange={(e) =>
+                            handleSettingsChange("columnLayout", e.target.value)
+                          }
+                        >
+                          <Radio value="row"> Across, Then Down </Radio>
+
+                          <Radio value="column"> Down,Then Across </Radio>
+                        </Radio.Group>
+                      </Form.Item>
+                    </Form>
+                  </TabPane>
+                </Tabs>
               </Container>
             </ModalPopup>
           </div>
