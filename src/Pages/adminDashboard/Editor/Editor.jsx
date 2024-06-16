@@ -486,6 +486,11 @@ const Editor = () => {
 
   const handleParentStyleChange = (property, value) => {
     debugger;
+  if(value =='-px' || !value || value == "px"){
+    value = 0
+  }else{
+    value = parseInt(value.replace("px", ""))
+  }
   
     const newElements = elements.map((el) => {
       debugger
@@ -496,16 +501,16 @@ const Editor = () => {
         // Calculate new positions based on the property
         switch (property) {
           case "marginLeft":
-            xaxis += parseInt(value.replace("px", ""));
+            xaxis += value;
             break;
           case "marginRight":
-            xaxis -= parseInt(value.replace("px", ""));
+            xaxis -= value;
             break;
           case "marginTop":
-            yaxis += parseInt(value.replace("px", ""));
+            yaxis += value;
             break;
           case "marginBottom":
-            yaxis -= parseInt(value.replace("px", ""));
+            yaxis -= value;
             break;
           
           default:

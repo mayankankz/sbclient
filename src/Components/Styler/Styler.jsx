@@ -85,6 +85,45 @@ const Styler = ({
             className="form-label mb-0"
             style={{ width: "40%", fontSize: "15px" }}
           >
+            Font-Size
+          </label>
+
+          <input
+            style={{ width: "35%" }}
+            type="text"
+            value={ element.styles["fontSize"]?.replace("px", "")}
+            onChange={(e) =>
+              handleStyleChange("fontSize", `${e.target.value}px`)
+            }
+          />
+        </div>
+        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+        <label className="form-label mb-0" style={{ width: "40%", fontSize: "15px" }}>Font Family</label>
+        <Select
+          style={{ width: 120 }}
+          onChange={(val) => handleStyleChange("fontFamily", `${val}`)}
+          value={styles["fontFamily"]}
+        >
+          <Option value="Arial, sans-serif">Arial</Option>
+          <Option value="Helvetica, sans-serif">Helvetica</Option>
+          <Option value="Times New Roman, serif">Times New Roman</Option>
+          <Option value="Georgia, serif">Georgia</Option>
+          <Option value="Verdana, sans-serif">Verdana</Option>
+          <Option value="Tahoma, sans-serif">Tahoma</Option>
+          <Option value="Trebuchet MS, sans-serif">Trebuchet MS</Option>
+          <Option value="Lucida Sans Unicode, sans-serif">Lucida Sans Unicode</Option>
+          <Option value="Courier New, monospace">Courier New</Option>
+          <Option value="Consolas, monospace">Consolas</Option>
+          <Option value="Comic Sans MS, cursive">Comic Sans MS</Option>
+          <Option value="Impact, fantasy">Impact</Option>
+        </Select>
+      </div>
+
+        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+          <label
+            className="form-label mb-0"
+            style={{ width: "40%", fontSize: "15px" }}
+          >
             Text Alignment
           </label>
 
@@ -199,7 +238,8 @@ const Styler = ({
           </div>
         )}
 
-        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+        {elements.find((el) => el.id === selectedElementId).type ===
+          "input" && ( <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
           <label
             className="form-label mb-0"
             style={{ width: "50%", fontSize: "15px" }}
@@ -207,8 +247,7 @@ const Styler = ({
             Field Mapping
           </label>
 
-          {elements.find((el) => el.id === selectedElementId).type ===
-            "input" && (
+          
             <div className="style-option">
               <Select
                 style={{ width: 120 }}
@@ -226,8 +265,8 @@ const Styler = ({
                 ))}
               </Select>
             </div>
-          )}
-        </div>
+          
+        </div>)}
 
         <div class="col-md-12">
           <label class="form-element-label headinglabel">Margins</label>
@@ -242,11 +281,9 @@ const Styler = ({
           </label>
           <input
             style={{ width: "35%" }}
-            type="number"
+            type="text"
             value={
-              parseInt(element.parentStyle["marginLeft"]?.replace("px", "")) ||
-              0
-            }
+              element.parentStyle["marginLeft"]}
             onChange={(e) =>
               handleParentStyleChange("marginLeft", `${e.target.value}px`)
             }
@@ -262,11 +299,9 @@ const Styler = ({
           </label>
           <input
             style={{ width: "35%" }}
-            type="number"
+            type="text"
             value={
-              parseInt(element.parentStyle["marginRight"]?.replace("px", "")) ||
-              0
-            }
+              element.parentStyle["marginRight"]}
             onChange={(e) =>
               handleParentStyleChange("marginRight", `${e.target.value}px`)
             }
@@ -282,10 +317,9 @@ const Styler = ({
           </label>
           <input
             style={{ width: "35%" }}
-            type="number"
+            type="text"
             value={
-              parseInt(element.parentStyle["marginTop"]?.replace("px", "")) || 0
-            }
+             element.parentStyle["marginTop"] }
             onChange={(e) =>
               handleParentStyleChange("marginTop", `${e.target.value}px`)
             }
@@ -301,12 +335,8 @@ const Styler = ({
           </label>
           <input
             style={{ width: "35%" }}
-            type="number"
-            value={
-              parseInt(
-                element.parentStyle["marginBottom"]?.replace("px", "")
-              ) || 0
-            }
+            type="text"
+            value={element.parentStyle["marginBottom"] }
             onChange={(e) =>
               handleParentStyleChange("marginBottom", `${e.target.value}px`)
             }
