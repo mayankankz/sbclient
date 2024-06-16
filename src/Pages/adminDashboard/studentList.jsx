@@ -228,71 +228,76 @@ const StudentList = () => {
       updateRowsAndColumns(rows, columns);
     }
     const printHtml = `
-      <html>
-        <head>
-          <style>
-            @page {
-              size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
-              margin: ${setting.marginTop}mm ${setting.marginRight}mm ${
-      setting.marginBottom
-    }mm ${setting.marginLeft}mm;
-              box-shadow: none;
-            }
-            body {
-              margin: 0;
-              display: grid;
-              grid-template-columns: repeat(${setting.columns}, 1fr);
-              grid-template-rows: repeat(${setting.rows}, 1fr);
-              grid-row-gap: ${setting.rowSpacing}mm;
-              grid-column-gap: ${setting.columnSpacing}mm;
-              height: 100%;
-              box-sizing: border-box;
-              grid-auto-flow: ${setting.columnLayout};
-              border: none; /* Ensure no border on the body */
-              align-items: center;
-            }
-            .id-card {
-              width: 100%;
-              height: 100%;
-              box-sizing: border-box;
-              page-break-inside: avoid;
-              display:flex;
-              align-items: center;
-            }
-            .id-card::before {
-              content: "";
-              position: absolute;
-              ${isVertical ? `
-                left: 0;
-                right: 0;
-                top: 50%;
-                border-bottom: 1px dotted black;
-                transform: translateY(-50%);
-              ` : `
-                top: 0;
-                bottom: 0;
-                left: 50%;
-                border-left: 1px dotted black;
-                transform: translateX(-50%);
-              `}
-            }
-           
-          </style>
-        </head>
-        <body>
-          ${idCardsHtml}
-        </body>
-      </html>
-    `;
+  <html>
+    <head>
+      <style>
+        @page {
+          size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
+          margin: ${setting.marginTop}mm ${setting.marginRight}mm ${setting.marginBottom}mm ${setting.marginLeft}mm;
+          box-shadow: none;
+        }
+        body {
+          margin: 0;
+          display: grid;
+          grid-template-columns: repeat(${setting.columns}, 1fr);
+          grid-template-rows: repeat(${setting.rows}, 1fr);
+          grid-row-gap: ${setting.rowSpacing}mm;
+          grid-column-gap: ${setting.columnSpacing}mm;
+          height: 100%;
+          box-sizing: border-box;
+          grid-auto-flow: ${setting.columnLayout};
+          border: none; /* Ensure no border on the body */
+          align-items: center;
+        }
+        .id-card {
+          --card-width: 100%;
+          --card-height: 100%;
+          --row-gap: ${setting.rowSpacing}mm;
+          --column-gap: ${setting.columnSpacing}mm;
+          
+          width: var(--card-width);
+          height: var(--card-height);
+          box-sizing: border-box;
+          page-break-inside: avoid;
+          display: flex;
+          align-items: center;
+          position: relative; /* Ensure the pseudo-element positions are relative to the card */
+        }
+        .id-card::before {
+          content: "";
+          position: absolute;
+          ${isVertical ? `
+            left: -10px;
+            right: 0;
+            top: 0;
+            border-bottom: 1px dotted black;
+            transform: translateY(calc(-50% - var(--row-gap) / 2));
+          ` : `
+            top: -30px;
+            bottom: 0;
+            left: 1px;
+            border-left: 1px dotted black;
+            transform: translateX(calc(-50% - var(--column-gap) / 2));
+          `}
+        }
+      </style>
+    </head>
+    <body>
+      ${idCardsHtml}
+    </body>
+  </html>
+`;
 
-    const printWindow = window.open("", "_blank");
-    printWindow.document.write(printHtml);
-    printWindow.document.close();
+const printWindow = window.open("", "_blank");
+printWindow.document.write(printHtml);
+printWindow.document.close();
 
-    printWindow.onload = () => {
-      setIsLoading(false);
-      printWindow.print();
-    };
+printWindow.onload = () => {
+  setIsLoading(false);
+  printWindow.print();
+};
+
+  
   };
 
   const handlePrintIDCards = (id) => {
