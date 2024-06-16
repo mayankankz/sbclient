@@ -273,7 +273,7 @@ const Editor = () => {
         height: type === "image" ? 50 : 10,
       },
       parentStyle: {},
-      styles: { fontSize: "10px" },
+      styles: { fontSize: "10px",whiteSpace: 'nowrap',textTransform: 'none' },
       zIndex: elements.length,
       fieldMapping: "",
     };
@@ -1033,7 +1033,7 @@ const Editor = () => {
                   ? { width: 55, height: 87 }
                   : { width: 87, height: 55 }
               }
-              elements={JSON.stringify(elements)}
+              elements={elements}
               backgroundImage={backgroundImage}
               layout={layout}
               isPreview={true}

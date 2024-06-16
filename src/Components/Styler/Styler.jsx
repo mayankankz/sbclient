@@ -1,6 +1,12 @@
 import React from "react";
 import "./styler.css";
 import { Select } from "antd";
+import { TfiItalic } from "react-icons/tfi";
+import { FormatBoldOutlined } from "@mui/icons-material";
+import FormatStrikethroughOutlinedIcon from "@mui/icons-material/FormatStrikethroughOutlined";
+import FormatItalicOutlinedIcon from "@mui/icons-material/FormatItalicOutlined";
+import FormatUnderlinedOutlinedIcon from "@mui/icons-material/FormatUnderlinedOutlined";
+import FormatOverlineOutlinedIcon from "@mui/icons-material/FormatOverlineOutlined";
 const { Option } = Select;
 const Styler = ({
   styles,
@@ -24,6 +30,16 @@ const Styler = ({
   ];
   debugger;
   const element = elements.find((t) => t.id === selectedElementId);
+
+  function handleFormatClick(type,val) {
+    debugger
+      if(element.styles[type]){
+        handleStyleChange(type,"")
+      }else{
+        handleStyleChange(type,val)
+      }
+  }
+
   return (
     <>
       <div className="style-panel row">
@@ -54,7 +70,7 @@ const Styler = ({
             className="form-label mb-0"
             style={{ width: "40%", fontSize: "15px" }}
           >
-            Color
+            Text-Color
           </label>
           <input
             style={{ width: "35%" }}
@@ -83,6 +99,85 @@ const Styler = ({
             <Option value="right">Right</Option>
           </Select>
         </div>
+
+        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+          <label
+            className="form-label mb-0"
+            style={{ width: "40%", fontSize: "15px" }}
+          >
+            Text Wrap
+          </label>
+
+          <Select
+            defaultValue="nowrap"
+            style={{ width: 120 }}
+            onChange={(val) => handleStyleChange("whiteSpace", `${val}`)}
+            value={styles["whiteSpace"]}
+          >
+            <Option value="nowrap">no-wrap</Option>
+            <Option value="pre-wrap">wrap</Option>
+          </Select>
+        </div>
+
+        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+          <label
+            className="form-label mb-0"
+            style={{ width: "40%", fontSize: "15px" }}
+          >
+            Text-Transform
+          </label>
+
+          <Select
+            defaultValue="none"
+            style={{ width: 120 }}
+            onChange={(val) => handleStyleChange("textTransform", `${val}`)}
+            value={styles["textTransform"]}
+          >
+            <Option value="none">None</Option>
+            <Option value="capitalize">Capitalize</Option>
+            <Option value="uppercase">Uppercase</Option>
+            <Option value="lowercase">Lowercase</Option>
+          </Select>
+        </div>
+
+        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+          <label
+            className="form-label mb-0"
+            style={{ width: "40%", fontSize: "15px" }}
+          >
+            Text-Transform
+          </label>
+
+          <Select
+            defaultValue="none"
+            style={{ width: 120 }}
+            onChange={(val) => handleStyleChange("textTransform", `${val}`)}
+            value={styles["textTransform"]}
+          >
+            <Option value="none">None</Option>
+            <Option value="capitalize">Capitalize</Option>
+            <Option value="uppercase">Uppercase</Option>
+            <Option value="lowercase">Lowercase</Option>
+          </Select>
+        </div>
+
+        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+          <label
+            className="form-label mb-0"
+            style={{ width: "40%", fontSize: "15px" }}
+          >
+            Text-Style
+          </label>
+
+          <div style={{ width: "40%", fontSize: "15px", cursor: "pointer" }}>
+            <FormatBoldOutlined className={element.styles["fontWeight"] ? "itemFormat" : ""} onClick={()=> handleFormatClick("fontWeight","bold")} /> {" "}
+            <FormatItalicOutlinedIcon className={element.styles["fontStyle"] ? "itemFormat" : ""} onClick={()=> handleFormatClick("fontStyle","italic")}  />{" "}
+            <FormatUnderlinedOutlinedIcon className={element.styles["textDecoration"] == "underline" ? "itemFormat" : ""}  onClick={()=> handleFormatClick("textDecoration","underline")} />{" "}
+            <FormatOverlineOutlinedIcon className={element.styles["textDecoration"] == "overline" ? "itemFormat" : ""}  onClick={()=> handleFormatClick("textDecoration","overline")}/>{" "}
+            <FormatStrikethroughOutlinedIcon className={element.styles["textDecoration"] == "line-through" ? "itemFormat" : ""} onClick={()=> handleFormatClick("textDecoration","line-through")} />{" "}
+          </div>
+        </div>
+
         {elements.find((el) => el.id === selectedElementId)?.type !==
           "image" && (
           <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">

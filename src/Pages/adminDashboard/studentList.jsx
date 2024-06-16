@@ -146,15 +146,13 @@ const StudentList = () => {
       setStudents(studentsData);
       debugger;
       setColums(
-        JSON.parse(response.colums[0].validationoptions).map(
-          (option) => {
-            return {
-              title: option,
-              dataIndex: option,
-              key: option,
-            };
-          }
-        )
+        JSON.parse(response.colums[0].validationoptions).map((option) => {
+          return {
+            title: option,
+            dataIndex: option,
+            key: option,
+          };
+        })
       );
       setLoadingStudents(false);
     } catch (error) {
@@ -181,7 +179,7 @@ const StudentList = () => {
       setting.pageType === "A3" ? (isVertical ? 3 : 3) : isVertical ? 5 : 2;
     const rows =
       setting.pageType === "A3" ? (isVertical ? 6 : 6) : isVertical ? 2 : 5;
-    handleSettingsChange("Layout", isVertical ? 'Landscape' : 'Portrait')
+    handleSettingsChange("Layout", isVertical ? "Landscape" : "Portrait");
     updateRowsAndColumns(rows, columns);
     setopenTemplates(false);
   };
@@ -200,28 +198,27 @@ const StudentList = () => {
             const template = templates.find((tpl) => tpl.id === templateId);
 
             return `
-         
-            ${ReactDOMServer.renderToStaticMarkup(
-              <IDcard
-                size={
-                  template.layout === "Vertical"
-                    ? { width: 55, height: 87 }
-                    : { width: 87, height: 55 }
-                }
-                backgroundImage={template.backgroundImage}
-                elements={template.elements}
-                data={student}
-              />
-            )}
-       
-        `;
+              ${ReactDOMServer.renderToStaticMarkup(
+               <div className="id-card"> <IDcard
+                  size={
+                    template.layout === "Vertical"
+                      ? { width: 55, height: 87 }
+                      : { width: 87, height: 55 }
+                  }
+                  backgroundImage={template.backgroundImage}
+                  elements={template.elements}
+                  data={student}
+                />
+                </div>
+              )}
+            `;
           })
           .join("");
       })
       .join("");
     debugger;
     const isVertical =
-      templates.some((tpl) => tpl.id === selectedTemplates[0]).layout ===
+      templates.filter((tpl) => tpl.id === selectedTemplates[0])[0].layout ===
       "Vertical";
     const columns =
       setting.pageType === "A3" ? (isVertical ? 3 : 3) : isVertical ? 5 : 2;
@@ -234,35 +231,56 @@ const StudentList = () => {
       <html>
         <head>
           <style>
-          @page {
-            size: ${setting.pageType} ${setting.Layout};
-            margin: ${setting.marginTop}mm ${setting.marginRight}mm ${setting.marginBottom}mm ${setting.marginLeft}mm;
-            box-shadow: none;
-          }
-          body {
-            margin: 0;
-            display: grid;
-            grid-template-columns: repeat(${setting.columns}, 1fr);
-            grid-template-rows: repeat(${setting.rows}, 1fr);
-            grid-row-gap: ${setting.rowSpacing}mm;
-            grid-column-gap: ${setting.columnSpacing}mm;
-            height: 100%;
-            box-sizing: border-box;
-            grid-auto-flow: ${setting.columnLayout};
-            
-          }
+            @page {
+              size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
+              margin: ${setting.marginTop}mm ${setting.marginRight}mm ${
+      setting.marginBottom
+    }mm ${setting.marginLeft}mm;
+              box-shadow: none;
+            }
+            body {
+              margin: 0;
+              display: grid;
+              grid-template-columns: repeat(${setting.columns}, 1fr);
+              grid-template-rows: repeat(${setting.rows}, 1fr);
+              grid-row-gap: ${setting.rowSpacing}mm;
+              grid-column-gap: ${setting.columnSpacing}mm;
+              height: 100%;
+              box-sizing: border-box;
+              grid-auto-flow: ${setting.columnLayout};
+              border: none; /* Ensure no border on the body */
+              align-items: center;
+            }
             .id-card {
               width: 100%;
               height: 100%;
               box-sizing: border-box;
               page-break-inside: avoid;
+              display:flex;
+              align-items: center;
             }
+            .id-card::before {
+              content: "";
+              position: absolute;
+              ${isVertical ? `
+                left: 0;
+                right: 0;
+                top: 50%;
+                border-bottom: 1px dotted black;
+                transform: translateY(-50%);
+              ` : `
+                top: 0;
+                bottom: 0;
+                left: 50%;
+                border-left: 1px dotted black;
+                transform: translateX(-50%);
+              `}
+            }
+           
           </style>
         </head>
         <body>
-        
           ${idCardsHtml}
-         
         </body>
       </html>
     `;
@@ -278,7 +296,8 @@ const StudentList = () => {
   };
 
   const handlePrintIDCards = (id) => {
-    if (!selectedTemplate.length) {
+    debugger;
+    if (!selectedTemplates.length) {
       toast.error("Please select a template.");
       return;
     }
@@ -289,71 +308,85 @@ const StudentList = () => {
       return student.id === id;
     });
     const idCardsHtml = student_data
-      .map(
-        (student) => `
-      <div class="id-card">
-        ${ReactDOMServer.renderToStaticMarkup(
-          <IDcard
-            size={
-              template.layout == "Vertical"
-                ? { width: 55, height: 87 }
-                : { width: 87, height: 55 }
-            }
-            backgroundImage={template.backgroundImage}
-            elements={template.elements}
-            data={student}
-          />
-        )}
-      </div>
-    `
-      )
+      .map((student) => {
+        return selectedTemplates
+          .map((templateId) => {
+            const template = templates.find((tpl) => tpl.id === templateId);
+
+            return `
+            ${ReactDOMServer.renderToStaticMarkup(
+              <IDcard
+                size={
+                  template.layout === "Vertical"
+                    ? { width: 55, height: 87 }
+                    : { width: 87, height: 55 }
+                }
+                backgroundImage={template.backgroundImage}
+                elements={template.elements}
+                data={student}
+              />
+            )}
+          `;
+          })
+          .join("");
+      })
       .join("");
     debugger;
-    const isVertical = template.layout === "Vertical";
+    const isVertical =
+      templates.filter((tpl) => tpl.id === selectedTemplates[0])[0].layout ===
+      "Vertical";
     const columns =
       setting.pageType === "A3" ? (isVertical ? 3 : 3) : isVertical ? 5 : 2;
     const rows =
       setting.pageType === "A3" ? (isVertical ? 6 : 6) : isVertical ? 2 : 5;
-
+    if (!setting.rows && !setting.columns) {
+      updateRowsAndColumns(rows, columns);
+    }
     const printHtml = `
-      <html>
-        <head>
-          <style>
+    <html>
+      <head>
+        <style>
           @page {
-            size: ${setting.pageType} ${setting.Layout};
-            margin: ${setting.marginTop}mm ${setting.marginRight}mm ${setting.marginBottom}mm ${setting.marginLeft}mm;
+            size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
+            margin: 3mm;
+            box-shadow: none;
           }
           body {
             margin: 0;
             display: grid;
-            grid-template-columns: repeat(${columns}, 1fr);
-            grid-template-rows: repeat(${rows}, 1fr);
+            grid-template-columns: repeat(${setting.columns}, 1fr);
+            grid-template-rows: repeat(${setting.rows}, 1fr);
             grid-row-gap: ${setting.rowSpacing}mm;
             grid-column-gap: ${setting.columnSpacing}mm;
-            grid-auto-flow: ${setting.columnLayout};
             height: 100%;
             box-sizing: border-box;
-           
+            grid-auto-flow: ${setting.columnLayout};
+            align-items: center;
+            border: none; /* Ensure no border on the body */
           }
-            .id-card {
-              width: 100%;
-              height: 100%;
-              box-sizing: border-box;
-              page-break-inside: avoid;
-            }
-          </style>
-        </head>
-        <body>
-          ${idCardsHtml}
-        </body>
-      </html>
-    `;
+          .id-card {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            page-break-inside: avoid;
+            display:flex;
+            align-items: center;
+          }
+
+         
+          
+        </style>
+      </head>
+      <body>
+        ${idCardsHtml}
+      </body>
+    </html>
+  `;
 
     const printWindow = window.open("", "_blank");
     printWindow.document.write(printHtml);
     printWindow.document.close();
 
-    // Wait until the content is fully loaded before printing
     printWindow.onload = () => {
       setIsLoading(false);
       printWindow.print();

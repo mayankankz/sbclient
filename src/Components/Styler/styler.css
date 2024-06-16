@@ -11,3 +11,9 @@
     font-weight: normal;
     background-color: #efefef;
 }
+
+.itemFormat{
+    background-color: #2b2b2b;
+    color: #fff;
+    border-radius: 10px;
+}
