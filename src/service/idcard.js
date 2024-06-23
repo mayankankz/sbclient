@@ -11,6 +11,17 @@ export const addTemplate = async (data) => {
   }
 };
 
+export const updateTemplate = async (data) => {
+  try {
+    const response = await api.post(`${apiUrl}/app/updatetemplate`, data);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+
 export const getTemplate = async (id) => {
   try {
     const response = await api.get("/idcard/id?id=" + id, {

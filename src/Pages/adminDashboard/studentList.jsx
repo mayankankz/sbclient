@@ -407,12 +407,28 @@ printWindow.onload = () => {
 
   const actionColumns = [
     {
+      title: "Session",
+      key: "Session",
+      render: (_, student) => (
+        <span>{student.session}</span>
+
+      ),
+    },{
       title: "Action",
       key: "action",
       render: (_, student) => (
         <Button onClick={() => handlePrintIDCards(student.id)}>
           Print ID Card
         </Button>
+      ),
+    },
+  ];
+  const imageColumns = [
+    {
+      title: "Student Img",
+      key: "img",
+      render: (_, student) => (
+        <div style={{width : '100%'}}><img loading="lazy" height={50} src={student.img} alt="studentImg" /></div>
       ),
     },
   ];
@@ -473,9 +489,12 @@ printWindow.onload = () => {
         {students.length > 0 && (
           <div style={{ display: "flex", gap: "10px" }}>
             <Button type="primary" onClick={() => setopenTemplates(true)}>
-              Select Template
+              Select Front Template
             </Button>
 
+            <Button type="primary" onClick={() => setopenTemplates(true)}>
+              Select Back Template
+            </Button>
             <Button type="primary" onClick={() => setOpen(true)}>
               Page Settings
             </Button>
@@ -750,16 +769,19 @@ printWindow.onload = () => {
               onCancel={() => setopenTemplates(false)}
               title="Select Template"
             >
-              <Container>
-                <Row>
+              <Container style={{maxHeight: '500px', overflowY: 'auto'}}>
+              <div className="d-flex gap-2 flex-wrap">
                   {templates.map((template) => (
-                    <Col lg={4} md={4}>
+                    
                       <div
                         onClick={() => handleTemplateChange(template.id)}
-                        style={{ scale: "0.7" }}
-                        className={`${
-                          selectedTemplate == template.id ? "selected" : ""
-                        }`}
+                        style={{ scale: "0.7",border: `${
+                          selectedTemplates[0] == template.id ? "2px solid red" : ""
+                        }`,
+                        height: '100%'
+                      
+                      }}
+                        
                       >
                         <IDcard
                           size={
@@ -772,9 +794,9 @@ printWindow.onload = () => {
                           isPreview={true}
                         />
                       </div>
-                    </Col>
+                    
                   ))}
-                </Row>
+                  </div>
               </Container>
             </Modal>
           </div>
@@ -785,7 +807,7 @@ printWindow.onload = () => {
       ) : (
         <Table
           dataSource={filteredStudents}
-          columns={columns.concat(actionColumns)}
+          columns={[...imageColumns,...columns.concat(actionColumns)]}
           rowKey="id"
           pagination={true}
           size="small"

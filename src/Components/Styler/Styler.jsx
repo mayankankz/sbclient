@@ -342,9 +342,8 @@ const Styler = ({
             }
           />
         </div>
-
         <div class="col-md-12">
-          <label class="form-element-label headinglabel">Border</label>
+          <label class="form-element-label headinglabel">Image</label>
         </div>
 
         <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
@@ -364,6 +363,32 @@ const Styler = ({
             <Option value="0%">Reactangle</Option>
           </Select>
         </div>
+
+        <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+          <label
+            className="form-label mb-0"
+            style={{ width: "40%", fontSize: "15px" }}
+          >
+            Resize Mode
+          </label>
+
+          <Select
+            style={{ width: 120 }}
+            onChange={(val) => handleStyleChange("objectFit", `${val}`)}
+            value={styles["objectFit"]}
+          >
+            <Option value="fill">Clip</Option>
+            <Option value="contain">Stretch</Option>
+            <Option value="cover">Zoom</Option>
+
+          </Select>
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-element-label headinglabel">Border</label>
+        </div>
+
+        
 
         <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
           <label

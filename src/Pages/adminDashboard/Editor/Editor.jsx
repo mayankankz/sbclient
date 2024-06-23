@@ -6,11 +6,13 @@ import {
   CancelOutlined,
   CloseOutlined,
   DragIndicator,
+  EditNote,
   UploadOutlined,
 } from "@mui/icons-material";
 import {
   Button,
   ButtonGroup,
+  Col,
   Container,
   FormGroup,
   Label,
@@ -20,6 +22,7 @@ import {
   Offcanvas,
   OffcanvasBody,
   OffcanvasHeader,
+  Row,
 } from "reactstrap";
 import "./editor.css";
 import { TfiHandDrag } from "react-icons/tfi";
@@ -28,14 +31,16 @@ import { useReactToPrint } from "react-to-print";
 import ContextMenu from "../../../Components/ContexctMenu";
 import GuideLines from "../../../Components/GuildeLines/GuildLines";
 import uniqid from "uniqid";
-import { addTemplate, getAllTemplate } from "../../../service/idcard";
+import { addTemplate, getAllTemplate, updateTemplate } from "../../../service/idcard";
 import IDcard from "../../../Components/IDCARD/IDcard";
 import { toast } from "react-toastify";
 import preview from "../../../assets/images/demo/user.jpeg";
-import { Input, Upload } from "antd";
+import { Input, Popconfirm, Upload } from "antd";
 import Styler from "../../../Components/Styler/Styler";
 import { Button as AntdButton } from "antd";
 import ImageUploadModal from "../../../Components/Modal/ImageUpload";
+import { Modal as antdModel } from "antd";
+const { confirm } = antdModel;
 import { BsUpload } from "react-icons/bs";
 const Editor = () => {
   const [elements, setElements] = useState([]);
@@ -52,6 +57,7 @@ const Editor = () => {
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [flag, setFlag] = useState(true);
+  const [openTemplates, setOpenTemplates] = useState(false);
   const availableFields = [
     "studentname",
     "fathersname",
@@ -68,7 +74,7 @@ const Editor = () => {
     "housename",
   ];
   const contentToPrint = useRef(null);
-  const [isUploadOpen,setIsUploadOpen] = useState(false)
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -76,12 +82,24 @@ const Editor = () => {
     elementId: null,
   });
   const [guideLines, setGuideLines] = useState([]);
+  const [name, setName] = useState("");
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [openConfirmUpdate, setOpenConfirmUpdate] = useState(false);
+
+  const [loading,setLoading] = useState(false)
+  const [updateID,setUpdateId] = useState('');
+
   const toggleModal = () => setIsUploadOpen(!isUploadOpen);
+  const toggleTemplate = () => {
+    debugger;
+    setOpenTemplates(!openTemplates);
+  };
   function resetAll() {
     setElements([]);
     setSelectedElementId([]);
     setStyles({});
     setBackgroundImage(null);
+    setName('')
   }
 
   const handlePrint = useReactToPrint({
@@ -95,14 +113,38 @@ const Editor = () => {
   };
 
   const handleRightClick = (event, elementId) => {
+    debugger
     event.preventDefault();
+  
+    const menuWidth = 250; 
+    const menuHeight = 380; 
+    const padding = 10;
+  
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+  
+    let x = event.clientX;
+    if (x + menuWidth + padding > viewportWidth) {
+      x = viewportWidth - menuWidth - padding;
+    } else if (x < padding) {
+      x = padding;
+    }
+  
+    let y = event.clientY;
+    if (y + menuHeight + padding > viewportHeight) {
+      y = viewportHeight - menuHeight - padding;
+    } else if (y < padding) {
+      y = padding;
+    }
+  
     setContextMenu({
       visible: true,
-      x: event.clientX,
-      y: event.clientY,
+      x,
+      y,
       elementId,
     });
   };
+  
 
   const handleContextMenuAction = (action) => {
     if (contextMenu.elementId !== null) {
@@ -254,7 +296,7 @@ const Editor = () => {
     }
   }, [layout]);
 
-  const addElement = (type,imgURl="") => {
+  const addElement = (type, imgURl = "") => {
     const newElement = {
       id: uniqid(),
       type,
@@ -267,13 +309,13 @@ const Editor = () => {
           ? preview
           : "",
       position: { x: 0, y: 0 },
-      imgURl:imgURl,
+      imgURl: imgURl,
       size: {
         width: type === "image" ? 50 : 100,
         height: type === "image" ? 50 : 10,
       },
       parentStyle: {},
-      styles: { fontSize: "10px",whiteSpace: 'nowrap',textTransform: 'none' },
+      styles: { fontSize: "10px", whiteSpace: "nowrap", textTransform: "none",ObjectFit: "contain" },
       zIndex: elements.length,
       fieldMapping: "",
     };
@@ -480,24 +522,22 @@ const Editor = () => {
     }));
   };
 
-  function handleMarginChange(margin) {
-
-  }
+  function handleMarginChange(margin) {}
 
   const handleParentStyleChange = (property, value) => {
     debugger;
-  if(value =='-px' || !value || value == "px"){
-    value = 0
-  }else{
-    value = parseInt(value.replace("px", ""))
-  }
-  
+    if (value == "-px" || !value || value == "px") {
+      value = 0;
+    } else {
+      value = parseInt(value.replace("px", ""));
+    }
+
     const newElements = elements.map((el) => {
-      debugger
+      debugger;
       if (el.id === selectedElementId) {
         let xaxis = el.position.x;
         let yaxis = el.position.y;
-  
+
         // Calculate new positions based on the property
         switch (property) {
           case "marginLeft":
@@ -512,11 +552,11 @@ const Editor = () => {
           case "marginBottom":
             yaxis -= value;
             break;
-          
+
           default:
             break;
         }
-  
+
         return {
           ...el,
           parentStyle: {
@@ -528,15 +568,14 @@ const Editor = () => {
       }
       return el;
     });
-  
+
     setElements(newElements);
-  
+
     setStyles((prevStyles) => ({
       ...prevStyles,
       [property]: value,
     }));
   };
-  
 
   const handleContentChange = (content) => {
     const newElements = elements.map((el) => {
@@ -559,20 +598,60 @@ const Editor = () => {
     setElements(newElements);
   };
 
+  
+
   const saveTemplate = async () => {
     const templateData = {
       elements: elements.map((el) => ({ ...el })),
       layout,
       backgroundImage,
+      styles,
+      name,
     };
 
     try {
+      setLoading(true)
       const response = await addTemplate(templateData);
+      setUpdateId('')
+      setOpenConfirm(false);
+      setOpenConfirmUpdate(false);
       resetAll();
+
       toast.success("Template saved successfully.");
     } catch (error) {
       toast.error("Something went wrong.");
       console.error("Error:", error);
+    } finally{
+      setLoading(false)
+
+    }
+  };
+
+
+  const editTemplate = async () => {
+    const templateData = {
+      elements: elements.map((el) => ({ ...el })),
+      layout,
+      backgroundImage,
+      styles,
+      id: updateID
+    };
+
+    try {
+      setLoading(true)
+      const response = await updateTemplate(templateData);
+      setUpdateId('')
+      setOpenConfirm(false);
+      setOpenConfirmUpdate(false);
+      resetAll();
+
+      toast.success("Template updated successfully.");
+    } catch (error) {
+      toast.error("Something went wrong.");
+      console.error("Error:", error);
+    } finally{
+      setLoading(false)
+
     }
   };
 
@@ -587,13 +666,19 @@ const Editor = () => {
   };
 
   const loadTemplate = (templateId) => {
+    debugger
     const template = templates.find((t) => t.id === templateId);
     if (template) {
-      setElements(JSON.parse(template.elements));
+      setUpdateId(templateId);
+      setElements(template.elements);
+      setStyles(template.styles)
       setLayout(template.layout);
       setBackgroundImage(template.backgroundImage);
+      setOpenTemplates(false);
     }
   };
+
+
   const handleBackgroundImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -612,7 +697,6 @@ const Editor = () => {
   useEffect(() => {
     fetchTemplates();
   }, []);
-
 
   const handleKeyDown = (event) => {
     if (selectedElementId.length > 0) {
@@ -652,21 +736,21 @@ const Editor = () => {
     }
   };
 
-  const handleMarginAdjust = (type,val) => {
+  const handleMarginAdjust = (type, val) => {
     if (selectedElementId.length > 0) {
       let direction = { x: 0, y: 0 };
       switch (type) {
         case "top":
-          direction.y +=val;
+          direction.y += val;
           break;
         case "bottom":
-          direction.y -=val;
+          direction.y -= val;
           break;
         case "left":
-          direction.x +=val;
+          direction.x += val;
           break;
         case "right":
-          direction.x -=val;
+          direction.x -= val;
           break;
         default:
           return;
@@ -699,9 +783,7 @@ const Editor = () => {
   return (
     <>
       <div className="App h-100 w-100 d-flex align-items-center">
-      
         <div className="main mb-5" style={{ width: "25%" }}>
-        
           <div className="layout mb-5 d-flex flex-column">
             <label htmlFor="">Select Layout</label>
             <ButtonGroup>
@@ -737,33 +819,82 @@ const Editor = () => {
             <button className="button-17" onClick={() => resetAll()}>
               Clear All
             </button>
-            <button className="button-17" onClick={saveTemplate}>
-              Save Template
+            <button className="button-17 " onClick={toggleModal}>
+              <BsUpload size={25} className="mr-5" /> <span>Upload Assets</span>
             </button>
+
             <button className="button-17" onClick={togglePreview}>
               Preview
             </button>
-            
           </div>
-          <div className="row mt-5 "><div className="col-md-12"><button className="button-17 w-100 d-flex gap-2" onClick={toggleModal}><BsUpload size={25} className="mr-5"/> <span>Upload Assets</span></button></div></div>
           <Container className="col-md-12 mt-5">
           <FormGroup className="mb-5">
             <Label for="formFile" className="form-label">
               Upload Design
             </Label>
             <div className="d-flex align-items-center gap-2">
-            <Input
-              type="file"
-              id="formFile"
-              onChange={handleBackgroundImageChange}
-            />
-            <CancelOutlined onClick={() => setBackgroundImage(null)} size={25} />
+              <Input
+                type="file"
+                id="formFile"
+                onChange={handleBackgroundImageChange}
+              />
+              <CancelOutlined
+                onClick={() => setBackgroundImage(null)}
+                size={25}
+              />
             </div>
-            
           </FormGroup>
-          
         </Container>
-        
+          <div className="row mt-5 ">
+           {!updateID ? <div className="col-md-12">
+              <Popconfirm
+                title="Enter template Name."
+                description=<Input onChange={(e) => setName(e.target.value)} />
+                open={openConfirm}
+                onConfirm={saveTemplate}
+                okButtonProps={{
+                  loading: loading,
+                }}
+                onCancel={()=> setOpenConfirm(false)}
+              >
+                <button
+                  className="button-17 w-100 d-flex gap-2"
+                  onClick={()=> setOpenConfirm(true)}
+                >
+                  Save Template
+                </button>
+              </Popconfirm>
+            </div> :<div className="col-md-12">
+            <Popconfirm
+              title="Are you sure want to save."
+              open={openConfirmUpdate}
+              onConfirm={editTemplate}
+              okButtonProps={{
+                loading: loading,
+              }}
+              onCancel={()=> setOpenConfirmUpdate(false)}
+            >
+              <button
+                className="button-17 w-100 d-flex gap-2"
+                onClick={()=> setOpenConfirmUpdate(true)}
+              >
+                Update Template
+              </button>
+            </Popconfirm>
+          </div>}
+          </div>
+         
+          <div className="row mt-5 ">
+            <div className="col-md-12">
+              <button
+                className="button-17 w-100 d-flex gap-2"
+                onClick={toggleTemplate}
+              >
+                <EditNote size={25} className="mr-5" />{" "}
+                <span>Previous IDCARD</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div
@@ -778,6 +909,7 @@ const Editor = () => {
         >
           <div
             className="workspace"
+            onClick={() => setSelectedElementId([])}
             style={{
               scale: "2",
               width: `${workspaceDimensions.width}mm`,
@@ -810,7 +942,6 @@ const Editor = () => {
                   onMouseUpCapture={() => {
                     setFlag(false);
                   }}
-                
                   axis="both"
                   size={{ width: el.size.width, height: el.size.height }}
                   onResizeStart={handleStop}
@@ -918,8 +1049,8 @@ const Editor = () => {
                   onContextMenu={(e) => handleRightClick(e, el.id)}
                 >
                   <div
-                 
                     onClick={(event) => {
+                      event.stopPropagation();
                       const idToAdd = el.id;
                       if (event.shiftKey) {
                         setSelectedElementId((prev) => [...prev, idToAdd]);
@@ -931,12 +1062,13 @@ const Editor = () => {
                     style={{
                       width: "100%",
                       height: "100%",
-                      overflow: "hidden",
+                      overflow: `${ el.type === "image" ? "" :  "hidden"}`,
                       whiteSpace: "nowrap",
                     }}
                   >
                     {selectedElementId?.includes(el.id) && (
                       <div
+                        onClick={(event) => event.stopPropagation()}
                         className="drag-handle"
                         style={{
                           cursor: "move",
@@ -964,9 +1096,9 @@ const Editor = () => {
                     )}
                     {el.type === "image" && (
                       <img
-                        src={el.imgURl ? el.imgURl :preview}
+                        src={el.imgURl ? el.imgURl : preview}
                         alt="img"
-                        style={{ ...el.styles, width: "100%", height: "100%" }}
+                        style={{ ...el.styles, width: "100%", height: "100%"}}
                       />
                     )}
                     {el.type === "box" && (
@@ -1046,14 +1178,7 @@ const Editor = () => {
           </div>
         </ModalBody>
       </Modal>
-      {/* <div className="template-list" style={{ marginLeft: '20px' }}>
-        <h3>Saved Templates</h3>
-        {templates.map(template => (
-        <div key={template.id} className="template-item">
-          <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
-        </div>
-      ))}
-    </div> */}
+      
 
       {contextMenu.visible && (
         <ContextMenu
@@ -1071,7 +1196,51 @@ const Editor = () => {
         />
       )}
 
-      {isUploadOpen && <ImageUploadModal addElement={addElement} isOpen={isUploadOpen} toggle={toggleModal} /> }
+      {isUploadOpen && (
+        <ImageUploadModal
+          addElement={addElement}
+          isOpen={isUploadOpen}
+          toggle={toggleModal}
+        />
+      )}
+
+      <div>
+        <Modal
+          size={"xl"}
+          isOpen={openTemplates}
+          toggle={toggleTemplate}
+          title="Select IDCARD"
+        >
+          <ModalHeader toggle={toggleTemplate}>Upload Images</ModalHeader>
+
+          <Container>
+            <Row>
+              {templates.map((template) => (
+                <Col lg={4} md={4}>
+                  <div
+                    onClick={() => loadTemplate(template.id)}
+                    style={{ scale: "0.7"}}
+                  >
+                    <IDcard
+                      size={
+                        template.layout == "Vertical"
+                          ? { width: 55, height: 87 }
+                          : { width: 87, height: 55 }
+                      }
+                      backgroundImage={template.backgroundImage}
+                      elements={template.elements}
+                      isPreview={true}
+                    />
+                    <div className="text-center" style={{ fontSize: "25px" }}>
+                      {template.name}
+                    </div>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Container>
+        </Modal>
+      </div>
     </>
   );
 };
