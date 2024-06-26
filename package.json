@@ -25,6 +25,7 @@
     "re-resizable": "^6.9.16",
     "react": "^18.2.0",
     "react-accordion": "^0.3.0",
+    "react-apexcharts": "^1.4.1",
     "react-chartjs-2": "^5.2.0",
     "react-countdown": "^2.3.5",
     "react-dom": "^18.2.0",

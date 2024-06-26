@@ -126,7 +126,7 @@ const AdminLayout = () => {
             
 
           </Header>
-          <Content style={{ padding: '20px' }}>
+          <Content style={{ padding: '20px',    background: 'rgb(235, 237, 240)' }}>
             <Outlet />
           </Content>
           

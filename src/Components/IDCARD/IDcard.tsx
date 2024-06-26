@@ -10,7 +10,7 @@ const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
     }}
     return el.content || '';
   };
-debugger
+
   return (
     <div
       className="workspace"

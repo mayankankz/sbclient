@@ -50,6 +50,7 @@ const StudentList = () => {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [open, setOpen] = useState(false);
   const [openTemplates, setopenTemplates] = useState(false);
+  const [isBackSide,setIsBackSide] = useState(false);
   const [setting, setSettings] = useState({
     pageType: "A4",
     Layout: "Portrait",
@@ -191,6 +192,10 @@ const StudentList = () => {
     }
     setIsLoading(true);
 
+   if(isBackSide){ for (let i = 0; i < filteredStudents.length - 1; i += 2) {
+      [filteredStudents[i], filteredStudents[i + 1]] = [filteredStudents[i + 1], filteredStudents[i]];
+    }}
+
     const idCardsHtml = filteredStudents
       .map((student) => {
         return selectedTemplates
@@ -199,16 +204,18 @@ const StudentList = () => {
 
             return `
               ${ReactDOMServer.renderToStaticMarkup(
-               <div className="id-card"> <IDcard
-                  size={
-                    template.layout === "Vertical"
-                      ? { width: 55, height: 87 }
-                      : { width: 87, height: 55 }
-                  }
-                  backgroundImage={template.backgroundImage}
-                  elements={template.elements}
-                  data={student}
-                />
+                <div className="id-card">
+                  {" "}
+                  <IDcard
+                    size={
+                      template.layout === "Vertical"
+                        ? { width: 55, height: 87 }
+                        : { width: 87, height: 55 }
+                    }
+                    backgroundImage={template.backgroundImage}
+                    elements={template.elements}
+                    data={student}
+                  />
                 </div>
               )}
             `;
@@ -233,11 +240,13 @@ const StudentList = () => {
       <style>
         @page {
           size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
-          margin: ${setting.marginTop}mm ${setting.marginRight}mm ${setting.marginBottom}mm ${setting.marginLeft}mm;
+          margin: ${setting.marginTop}mm ${setting.marginRight}mm ${
+      setting.marginBottom
+    }mm ${setting.marginLeft}mm;
           box-shadow: none;
         }
         body {
-          margin: 0;
+         
           display: grid;
           grid-template-columns: repeat(${setting.columns}, 1fr);
           grid-template-rows: repeat(${setting.rows}, 1fr);
@@ -262,23 +271,30 @@ const StudentList = () => {
           display: flex;
           align-items: center;
           position: relative; /* Ensure the pseudo-element positions are relative to the card */
-        }
+      }
+         
+        
         .id-card::before {
           content: "";
           position: absolute;
-          ${isVertical ? `
+          ${
+            isVertical
+              ? `
             left: -10px;
             right: 0;
             top: 0;
             border-bottom: 1px dotted black;
             transform: translateY(calc(-50% - var(--row-gap) / 2));
-          ` : `
+          `
+              : `
             top: -30px;
             bottom: 0;
             left: 1px;
             border-left: 1px dotted black;
             transform: translateX(calc(-50% - var(--column-gap) / 2));
-          `}
+          `
+          }
+      
         }
       </style>
     </head>
@@ -288,18 +304,26 @@ const StudentList = () => {
   </html>
 `;
 
-const printWindow = window.open("", "_blank");
-printWindow.document.write(printHtml);
-printWindow.document.close();
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
 
-printWindow.onload = () => {
-  setIsLoading(false);
-  printWindow.print();
-};
-
-  
+    printWindow.onload = () => {
+      setIsLoading(false);
+      printWindow.print();
+    };
   };
 
+  function handleFrontChanage(val) {
+    setopenTemplates(true)
+    setIsBackSide(false)
+  }
+
+  function handleBackChanage(val) {
+    setopenTemplates(true)
+    setIsBackSide(true)
+  }
+  
   const handlePrintIDCards = (id) => {
     debugger;
     if (!selectedTemplates.length) {
@@ -353,11 +377,13 @@ printWindow.onload = () => {
         <style>
           @page {
             size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
-            margin: 3mm;
+            margin: ${setting.marginTop}mm ${setting.marginRight}mm ${
+      setting.marginBottom
+    }mm ${setting.marginLeft}mm;
             box-shadow: none;
           }
           body {
-            margin: 0;
+           
             display: grid;
             grid-template-columns: repeat(${setting.columns}, 1fr);
             grid-template-rows: repeat(${setting.rows}, 1fr);
@@ -409,11 +435,9 @@ printWindow.onload = () => {
     {
       title: "Session",
       key: "Session",
-      render: (_, student) => (
-        <span>{student.session}</span>
-
-      ),
-    },{
+      render: (_, student) => <span>{student.session}</span>,
+    },
+    {
       title: "Action",
       key: "action",
       render: (_, student) => (
@@ -428,7 +452,9 @@ printWindow.onload = () => {
       title: "Student Img",
       key: "img",
       render: (_, student) => (
-        <div style={{width : '100%'}}><img loading="lazy" height={50} src={student.img} alt="studentImg" /></div>
+        <div style={{ width: "100%" }}>
+          <img loading="lazy" height={50} src={student.img} alt="studentImg" />
+        </div>
       ),
     },
   ];
@@ -468,7 +494,7 @@ printWindow.onload = () => {
           </Select>
           <Select
             placeholder="Select Class"
-            style={{ width: 200 }}
+            style={{ width: 120 }}
             value={filters.class}
             onChange={(value) => handleFilterChange("class", value)}
             allowClear
@@ -488,12 +514,12 @@ printWindow.onload = () => {
 
         {students.length > 0 && (
           <div style={{ display: "flex", gap: "10px" }}>
-            <Button type="primary" onClick={() => setopenTemplates(true)}>
-              Select Front Template
+            <Button type="primary" onClick={handleFrontChanage}>
+              Select Front Side
             </Button>
 
-            <Button type="primary" onClick={() => setopenTemplates(true)}>
-              Select Back Template
+            <Button type="primary" onClick={handleBackChanage}>
+              Select Back Side
             </Button>
             <Button type="primary" onClick={() => setOpen(true)}>
               Page Settings
@@ -769,34 +795,34 @@ printWindow.onload = () => {
               onCancel={() => setopenTemplates(false)}
               title="Select Template"
             >
-              <Container style={{maxHeight: '500px', overflowY: 'auto'}}>
-              <div className="d-flex gap-2 flex-wrap">
+              <Container style={{ maxHeight: "500px", overflowY: "auto" }}>
+                <div className="d-flex gap-2 flex-wrap">
                   {templates.map((template) => (
-                    
-                      <div
-                        onClick={() => handleTemplateChange(template.id)}
-                        style={{ scale: "0.7",border: `${
-                          selectedTemplates[0] == template.id ? "2px solid red" : ""
+                    <div
+                      onClick={() => handleTemplateChange(template.id)}
+                      style={{
+                        scale: "0.7",
+                        border: `${
+                          selectedTemplates[0] == template.id
+                            ? "2px solid red"
+                            : ""
                         }`,
-                        height: '100%'
-                      
+                        height: "100%",
                       }}
-                        
-                      >
-                        <IDcard
-                          size={
-                            template.layout == "Vertical"
-                              ? { width: 55, height: 87 }
-                              : { width: 87, height: 55 }
-                          }
-                          backgroundImage={template.backgroundImage}
-                          elements={template.elements}
-                          isPreview={true}
-                        />
-                      </div>
-                    
+                    >
+                      <IDcard
+                        size={
+                          template.layout == "Vertical"
+                            ? { width: 55, height: 87 }
+                            : { width: 87, height: 55 }
+                        }
+                        backgroundImage={template.backgroundImage}
+                        elements={template.elements}
+                        isPreview={true}
+                      />
+                    </div>
                   ))}
-                  </div>
+                </div>
               </Container>
             </Modal>
           </div>
@@ -807,7 +833,7 @@ printWindow.onload = () => {
       ) : (
         <Table
           dataSource={filteredStudents}
-          columns={[...imageColumns,...columns.concat(actionColumns)]}
+          columns={[...imageColumns, ...columns.concat(actionColumns)]}
           rowKey="id"
           pagination={true}
           size="small"
