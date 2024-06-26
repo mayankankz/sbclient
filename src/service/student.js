@@ -22,3 +22,17 @@ export const getAllStudentBySchool = async (schoolId, className) => {
     throw new Error('Failed to fetch student data');
   }
 };
+
+
+
+export const getadminData = async () => {
+  try {
+    const response = await api.get(
+      `${apiUrl}/app/admindashboard`
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching student data:', error);
+    throw new Error('Failed to fetch admin data');
+  }
+};

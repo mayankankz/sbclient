@@ -3,16 +3,15 @@
 import ReactApexChart from "react-apexcharts";
 import { Typography } from "antd";
 import { MinusOutlined } from "@ant-design/icons";
-const lineChart = {
+
+function LineChart({labels,data}) {
+  const { Title, Paragraph } = Typography;
+  const lineChart = {
     series: [
+      
       {
-        name: "Mobile apps",
-        data: [350, 40, 300, 220, 500, 250, 400, 230, 500],
-        offsetY: 0,
-      },
-      {
-        name: "Websites",
-        data: [30, 90, 40, 140, 290, 290, 340, 230, 400],
+        name: "Studnets",
+        data: data,
         offsetY: 0,
       },
     ],
@@ -36,6 +35,7 @@ const lineChart = {
       },
       stroke: {
         curve: "smooth",
+        colors:['#EB3E35']
       },
   
       yaxis: {
@@ -43,7 +43,7 @@ const lineChart = {
           style: {
             fontSize: "14px",
             fontWeight: 600,
-            colors: ["#8c8c8c"],
+            colors: ["#EB3E35"],
           },
         },
       },
@@ -53,17 +53,7 @@ const lineChart = {
           style: {
             fontSize: "14px",
             fontWeight: 600,
-            colors: [
-              "#8c8c8c",
-              "#8c8c8c",
-              "#8c8c8c",
-              "#8c8c8c",
-              "#8c8c8c",
-              "#8c8c8c",
-              "#8c8c8c",
-              "#8c8c8c",
-              "#8c8c8c",
-            ],
+            colors: labels,
           },
         },
         categories: [
@@ -88,9 +78,6 @@ const lineChart = {
       },
     },
   };
-function LineChart() {
-  const { Title, Paragraph } = Typography;
-
   return (
     <>
       <div className="linechart">
