@@ -3,10 +3,17 @@ import preview from '../../assets/images/demo/user.jpeg'
 const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
   const [workspaceDimensions, setWorkspaceDimensions] = useState(size);
 
-  
+  function capitalizeWords(str) {
+    str = str.toLowerCase();
+  return str.replace(/\b\w/g, function(char) {
+    return char.toUpperCase();
+  });
+}
   const getContent = (el) => {
+    debugger
+    const isCapitalize= el.styles.textTransform == 'capitalize'
    if(!isPreview){ if (el.fieldMapping && data[el.fieldMapping]) {
-      return data[el.fieldMapping];
+      return isCapitalize ? capitalizeWords(data[el.fieldMapping]) :data[el.fieldMapping];
     }}
     return el.content || '';
   };

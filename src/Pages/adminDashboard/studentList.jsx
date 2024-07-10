@@ -185,6 +185,26 @@ const StudentList = () => {
     setopenTemplates(false);
   };
 
+  function reverseRows(students, studentsPerRow) {
+    let result = [];
+    let numRows = Math.ceil(students.length / studentsPerRow);
+
+    for (let i = 0; i < numRows; i++) {
+        let start = i * studentsPerRow;
+        let end = start + studentsPerRow;
+
+        if (end > students.length) {
+            end = students.length;
+        }
+
+        let row = students.slice(start, end).reverse();
+        result = result.concat(row);
+    }
+
+    return result;
+}
+
+
   const handlePrintAllIDCards = () => {
     if (!selectedTemplates.length) {
       toast.error("Please select a template.");
@@ -192,11 +212,24 @@ const StudentList = () => {
     }
     setIsLoading(true);
 
-   if(isBackSide){ for (let i = 0; i < filteredStudents.length - 1; i += 2) {
-      [filteredStudents[i], filteredStudents[i + 1]] = [filteredStudents[i + 1], filteredStudents[i]];
-    }}
+    const isVertical =
+      templates.filter((tpl) => tpl.id === selectedTemplates[0])[0].layout ===
+      "Vertical";
+    const columns =
+      setting.pageType === "A3" ? (isVertical ? 3 : 3) : isVertical ? 5 : 2;
+    const rows =
+      setting.pageType === "A3" ? (isVertical ? 6 : 6) : isVertical ? 2 : 5;
+    if (!setting.rows && !setting.columns) {
+      updateRowsAndColumns(rows, columns);
+    }
+    let studentsArr = filteredStudents
+   if(isBackSide){ 
 
-    const idCardsHtml = filteredStudents
+    studentsArr = reverseRows(filteredStudents ,columns )
+
+   }
+
+    const idCardsHtml = studentsArr
       .map((student) => {
         return selectedTemplates
           .map((templateId) => {
@@ -223,17 +256,8 @@ const StudentList = () => {
           .join("");
       })
       .join("");
-    debugger;
-    const isVertical =
-      templates.filter((tpl) => tpl.id === selectedTemplates[0])[0].layout ===
-      "Vertical";
-    const columns =
-      setting.pageType === "A3" ? (isVertical ? 3 : 3) : isVertical ? 5 : 2;
-    const rows =
-      setting.pageType === "A3" ? (isVertical ? 6 : 6) : isVertical ? 2 : 5;
-    if (!setting.rows && !setting.columns) {
-      updateRowsAndColumns(rows, columns);
-    }
+  
+    
     const printHtml = `
   <html>
     <head>

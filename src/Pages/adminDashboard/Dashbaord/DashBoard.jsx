@@ -108,8 +108,8 @@ const DashBoard = () => {
             </Col>
             <Col xs={24} sm={24} md={12} lg={12} xl={14} className="mb-24">
               <Card bordered={false} className="criclebox h-full">
-                <LineChart labels={data.studentsChart.map(d => d.name)}
-                data={data.studentsChart.map(d => parseInt(d.value))} />
+              { /*<LineChart labels={data.studentsChart.map((a)=> a.name)} data={data.studentsChart.map((a)=> parseInt(a.value))} /> */}
+
               </Card>
             </Col>
           </Row>

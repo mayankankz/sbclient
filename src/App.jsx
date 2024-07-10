@@ -52,6 +52,8 @@ import Portfolio from "./Components/portfolio/Protfolio";
 import StudentList from "./Pages/adminDashboard/studentList";
 import PrivateRoute from "./Pages/adminDashboard/PrivateRoutes";
 import Editor_ from "./Pages/adminDashboard/Editor/Editor_";
+import ErrorBoundary from "antd/es/alert/ErrorBoundary";
+import StudentInfo from "./Pages/adminDashboard/Students/StudentInfo";
 function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
@@ -161,13 +163,13 @@ function App() {
                 <Route path="/terms-and-conditions" element={<TAndC />} />
                 <Route path="/privacy-policy" element={<Privacy />} />
 
-                <Route path="/admin/*" element={<PrivateRoute>
+                <Route path="/admin/*" element={<ErrorBoundary><PrivateRoute>
                   <AdminLayout />
-                </PrivateRoute>}>
+                </PrivateRoute></ErrorBoundary>}>
                 
                   <Route index element={<DashBoard />} />
                   <Route path="editor" element={<Editor />} />
-                  <Route path="editor_" element={<Editor_ />} />
+                  <Route path="addstudent" element={<StudentInfo />} />
                   <Route path="studentlist" element={<StudentList />} />
                 </Route>
                 <Route path="/login" element={<SignIn />} />

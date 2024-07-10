@@ -26,6 +26,7 @@ export const getAllStudentBySchool = async (schoolId, className) => {
 
 
 export const getadminData = async () => {
+  debugger
   try {
     const response = await api.get(
       `${apiUrl}/app/admindashboard`

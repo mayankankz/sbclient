@@ -11,6 +11,13 @@ import storage from "redux-persist/lib/storage"; // Import the storage option
 import rootReducer from "./store/reducer/rootReducer";
 import { ToastContainer, toast } from 'react-toastify';
   import 'react-toastify/dist/ReactToastify.css';
+  import {
+    QueryClient,
+    QueryClientProvider,
+    useQuery,
+  } from '@tanstack/react-query'
+  
+  const queryClient = new QueryClient()
 // const store = configureStore({
 //   reducer: rootReducer,
 // });
@@ -36,10 +43,12 @@ root.render(
   <>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
+      <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <App />
           
         </BrowserRouter>
+        </QueryClientProvider>
       </PersistGate>
     </Provider>
   </>
