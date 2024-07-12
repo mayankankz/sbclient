@@ -33,7 +33,7 @@ const items = [
   getItem('Dashboard', '1', <PieChartOutlined />, null, '/admin/'),
   getItem('Editor', '2', <EditOutlined />, null, '/admin/editor'),
   getItem('Student', 'sub1', <UserOutlined />, [
-    getItem('Students', '3', null, null, '/admin/addstudent'),
+    getItem('Manage Student', '3', null, null, '/admin/addstudent'),
     getItem('Generate ID Cards', '4', null, null, '/admin/studentlist'),
     getItem('Check List', '5', null, null, '/admin/checklist'),
   ], '/admin/addstudent'),

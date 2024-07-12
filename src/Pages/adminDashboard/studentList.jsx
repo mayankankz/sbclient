@@ -261,6 +261,7 @@ const StudentList = () => {
     const printHtml = `
   <html>
     <head>
+    <title>${isBackSide ? 'BACK SIDE' : 'FRONT SIDE'}</title>
       <style>
         @page {
           size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
@@ -398,6 +399,7 @@ const StudentList = () => {
     const printHtml = `
     <html>
       <head>
+         <title>${isBackSide ? 'BACK SIDE' : 'FRONT SIDE'}</title>
         <style>
           @page {
             size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
@@ -861,6 +863,7 @@ const StudentList = () => {
           rowKey="id"
           pagination={true}
           size="small"
+          style={{overflowX: 'scroll'}}
         />
       )}
     </div>

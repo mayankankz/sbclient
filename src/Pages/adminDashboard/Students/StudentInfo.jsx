@@ -9,7 +9,7 @@ import {
 
 import { toast } from "react-toastify";
 import TabPane from "antd/es/tabs/TabPane";
-import { DeleteOutline, Done, EditOutlined } from "@mui/icons-material";
+import { DeleteOutline, Done, DoneAllOutlined, EditOutlined } from "@mui/icons-material";
 import { getAllSchool, getAllStudentBySchool } from "../../../service/student";
 import Loader from "../../../Components/Loader/Loader";
 import EditStudent from "./EditStudent";
@@ -83,7 +83,7 @@ const StudentList = () => {
       setStudents(studentsData);
       debugger;
       setColums(
-        JSON.parse(JSON.parse(response.colums[0].validationoptions)).map((option) => {
+        JSON.parse(response.colums[0].validationoptions).map((option) => {
           return {
             title: option,
             dataIndex: option,
@@ -136,8 +136,9 @@ const StudentList = () => {
     {
       title: "Action",
       key: "action",
+      width: 20,
       render: (_, student) => (
-       <>
+       <div className="d-flex gap-1">
        <Button onClick={() => handleEdit(student)}>
        <EditOutlined />
      </Button>
@@ -147,9 +148,9 @@ const StudentList = () => {
    </Button>
 
    <Button onClick={() => console.log(student)}>
-   <span>Maked Completed</span>
+   <DoneAllOutlined />
  </Button>
-       </>
+       </div>
       ),
     },
   ];
@@ -172,7 +173,7 @@ const StudentList = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h3>Student List</h3>
+      <h3>Manage Student</h3>
       <div
         style={{
           marginBottom: "20px",

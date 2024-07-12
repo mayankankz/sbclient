@@ -828,12 +828,13 @@ const Editor = () => {
             </button>
           </div>
           <Container className="col-md-12 mt-5">
-          <FormGroup className="mb-5">
+          <FormGroup className="mb-5" >
             <Label for="formFile" className="form-label">
               Upload Design
             </Label>
             <div className="d-flex align-items-center gap-2">
               <Input
+              style={{height: '52px'}}
                 type="file"
                 id="formFile"
                 onChange={handleBackgroundImageChange}

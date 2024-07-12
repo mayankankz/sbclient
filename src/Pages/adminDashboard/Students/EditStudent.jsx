@@ -18,6 +18,7 @@ import customFileInput from "../../../Components/customFileInput";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { apiUrl } from "../../../utils/constant";
+import Loader from "../../../Components/Loader/Loader";
 function EditStudent({ studentsData, validationOptions, toggle, isOpen }) {
   const [student, setStudent] = useState({ ...studentsData });
   const [validationError, setValidationError] = useState(false);
@@ -121,6 +122,8 @@ function EditStudent({ studentsData, validationOptions, toggle, isOpen }) {
     } catch (error) {
       toast.error("Unable  to update student data.");
       setIsLoading(false);
+    } finally { 
+      setIsLoading(false);
     }
   };
 
@@ -128,9 +131,9 @@ function EditStudent({ studentsData, validationOptions, toggle, isOpen }) {
     <div>
       <Modal isOpen={isOpen} size="xl" centered toggle={toggle}>
         <ModalHeader toggle={toggle}>Edit Student</ModalHeader>
-        <ModalBody>
+        <ModalBody style={{minHeight: '500px'}}>
           <Container>
-            <Row>
+           {isLoading ? <Loader /> :<> <Row>
               <Col md={6}>
 
                 <Row>
@@ -238,7 +241,7 @@ function EditStudent({ studentsData, validationOptions, toggle, isOpen }) {
                     </Col>
                   )
               )}
-            </Row>
+            </Row></>}
           </Container>
         </ModalBody>
         <ModalFooter>
