@@ -223,10 +223,10 @@ const StudentList = () => {
     if (!setting.rows && !setting.columns) {
       updateRowsAndColumns(rows, columns);
     }
-    let studentsArr = filteredStudents
+    let studentsArr = students
    if(isBackSide){ 
 
-    studentsArr = reverseRows(filteredStudents ,columns )
+    studentsArr = reverseRows(students ,columns )
 
    }
 
