@@ -72,6 +72,19 @@ const Editor = () => {
     "dob",
     "section",
     "housename",
+    "name",
+    "husbandname",
+    "email",
+    "empid",
+    "designation",
+    "Bloodgroup",
+    "other1",
+    "other2",
+    "other3",
+    "validfrom",
+    "validTill"    
+
+
   ];
   const contentToPrint = useRef(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);

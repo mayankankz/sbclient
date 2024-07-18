@@ -28,6 +28,7 @@ const StudentList = () => {
   const [schools, setSchools] = useState([]);
   const [columns, setColums] = useState([]);
   const [classes, setClasses] = useState([
+    "Teachers",
     "Nursery",
     "KG 1",
     "KG 2",
@@ -450,12 +451,7 @@ const StudentList = () => {
     };
   };
 
-  const filteredStudents = students.filter((student) => {
-    return (
-      (!filters.class || student.class === filters.class) &&
-      (!filters.section || student.section === filters.section)
-    );
-  });
+ 
 
   const actionColumns = [
     {
@@ -495,7 +491,7 @@ const StudentList = () => {
 
   return (
     <div style={{ padding: "20px" }}>
-      <h3>Student List</h3>
+      <h4>Student/Teachers List</h4>
       <div
         style={{
           marginBottom: "20px",
@@ -534,7 +530,7 @@ const StudentList = () => {
             ))}
           </Select>
           <Button type="primary" onClick={async () => await fetchStudents()}>
-            Fetch Students
+            Fetch Data
           </Button>
         </div>
 
@@ -858,7 +854,7 @@ const StudentList = () => {
         <Loader />
       ) : (
         <Table
-          dataSource={filteredStudents}
+          dataSource={students}
           columns={[...imageColumns, ...columns.concat(actionColumns)]}
           rowKey="id"
           pagination={true}
