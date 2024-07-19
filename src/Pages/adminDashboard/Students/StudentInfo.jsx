@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Select, Table, Button, Modal } from "antd";
+import { Select, Table, Button, Modal, Popconfirm } from "antd";
 
 import { toast } from "react-toastify";
 import TabPane from "antd/es/tabs/TabPane";
@@ -18,6 +18,8 @@ import { Container } from "reactstrap";
 import axios from "axios";
 import { apiUrl } from "../../../utils/constant";
 import ImportExcelModal from "../../../Components/FileImport/ImportData";
+import AddStudent from "./AddStudent";
+import exportToPdf from "../../../Components/ExportPDF/ExportToPdf";
 const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [schools, setSchools] = useState([]);
@@ -42,6 +44,8 @@ const StudentList = () => {
   ]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isPopLoading, setIsPopLoading] = useState(false);
+
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentData, setStudentData] = useState({});
   const [filters, setFilters] = useState({
@@ -50,6 +54,8 @@ const StudentList = () => {
     section: "",
   });
   const [openEdit, setOpenEdit] = useState(false);
+  const [openAdd, setOpenAdd] = useState(false);
+
   const [selectedStudent, setSelectedStudent] = useState([]);
   const [openUpdateClass, setOpenUpdateClass] = useState(false);
   const [updatedClass, setUpdatedClass] = useState(null);
@@ -92,13 +98,15 @@ const StudentList = () => {
       setStudents(studentsData);
       debugger;
       setColums(
-        JSON.parse(response.colums[0].validationoptions).map((option) => {
-          return {
-            title: option,
-            dataIndex: option,
-            key: option,
-          };
-        })
+        JSON.parse(response.colums[0].validationoptions).map(
+          (option) => {
+            return {
+              title: option,
+              dataIndex: option,
+              key: option,
+            };
+          }
+        )
       );
       setLoadingStudents(false);
     } catch (error) {
@@ -166,9 +174,29 @@ const StudentList = () => {
     }
   }
 
+  async function handleDelete(id) {
+    debugger;
+    try {
+      setIsPopLoading(true);
+      const deleteStudent = await axios.delete(
+        `${apiUrl}/user/deletestudent/${id}`
+      );
+      await fetchStudents();
+      toast.success("Student deleted successfully.");
+    } catch (error) {
+      toast.error("Failed to delete student.");
+    } finally {
+      setIsPopLoading(false);
+    }
+  }
+
   const toggle = () => {
     setOpenEdit(!openEdit);
     setStudentData({});
+  };
+
+  const toggleAdd = () => {
+    setOpenAdd(!openAdd);
   };
 
   const actionColumns = [
@@ -186,10 +214,21 @@ const StudentList = () => {
           <Button onClick={() => handleEdit(student)}>
             <EditOutlined />
           </Button>
-
-          <Button onClick={() => console.log(student)}>
-            <DeleteOutline />
-          </Button>
+          <Popconfirm
+            title="Delete"
+            description="Are you sure to delete this student?"
+            onConfirm={() => handleDelete(student.id)}
+            onCancel={() => console.log("onCancel")}
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{
+              loading: isPopLoading,
+            }}
+          >
+            <Button onClick={() => console.log(student)}>
+              <DeleteOutline />
+            </Button>
+          </Popconfirm>
 
           <Button onClick={() => console.log(student)}>
             <DoneAllOutlined />
@@ -225,6 +264,104 @@ const StudentList = () => {
       ),
     },
   ];
+
+  const handleExportCheckList = () => {
+    setIsLoading(true);
+  
+    let studentsArr = students;
+  
+    // Dynamically identify columns from the first student object that have data
+    const tableColumns = Object.keys(studentsArr[0]).filter(
+      (key) => studentsArr[0][key] && studentsArr[0][key] !== "null"&&
+      key !== "imgUrl" && 
+      key !== "updatedAt" &&
+      key !== "createdAt"
+    );
+  
+    // Include "Image" as the first column
+    const allColumns = ["img", ...tableColumns.filter(col => col !== "img")];
+  
+    // Creating table headers
+    const tableHeaders = allColumns
+      .map((col) => `<th>${col.charAt(0).toUpperCase() + col.slice(1)}</th>`)
+      .join("");
+  
+    // Creating table rows with student data
+    const tableRows = studentsArr
+      .map((student) => {
+        return `
+          <tr>
+            ${allColumns
+              .map((col) =>
+                col === "img"
+                  ? `<td><img src="${student[col] || ''}" alt="student image" style="width: 50px; height: 50px;" /></td>`
+                  : `<td>${student[col] || ''}</td>`
+              )
+              .join("")}
+          </tr>
+        `;
+      })
+      .join("");
+  
+    // Creating the table HTML
+    const tableHtml = `
+      <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            ${tableHeaders}
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    `;
+  
+    const printHtml = `
+      <html>
+        <head>
+          <title>CheckList</title>
+          <style>
+            @page {
+              size: landscape;
+              margin: 3mm;
+              box-shadow: none;
+            }
+            body {
+              height: 100%;
+              box-sizing: border-box;
+              border: none;
+              margin: 0;
+              padding: 0;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            th, td {
+              border: 1px solid black;
+              padding: 8px;
+              text-align: left;
+            }
+          </style>
+        </head>
+        <body>
+          <h1 style="text-align : center;">${studentsArr[0]["schoolname"]}</h1>
+          ${tableHtml}
+        </body>
+      </html>
+    `;
+  
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
+  
+    printWindow.onload = () => {
+      setIsLoading(false);
+      printWindow.print();
+    };
+  };
+  
 
   if (isLoading) {
     return <Loader />;
@@ -280,7 +417,16 @@ const StudentList = () => {
             </Button>
           </div>
 
+          
           <div className="d-flex gap-2">
+
+          <Button type="primary" onClick={() => handleExportCheckList()}>
+              Export CheckList
+            </Button>
+
+            <Button type="primary" onClick={() => setOpenAdd(true)}>
+              Add New Student
+            </Button>
             <Button type="primary" onClick={() => setOpenUpdateClass(true)}>
               Update Class
             </Button>
@@ -294,7 +440,7 @@ const StudentList = () => {
         <Loader />
       ) : (
         <Table
-          dataSource={filteredStudents}
+          dataSource={students}
           columns={[
             ...selectColumns,
             ...imageColumns,
@@ -314,7 +460,19 @@ const StudentList = () => {
         toggle={toggle}
         studentsData={studentData}
         validationOptions={columns}
+        isTeacher={filters.class == "Teachers"  ? true : false}
       />
+
+      {openAdd && (
+        <AddStudent
+          isOpen={openAdd}
+          toggle={toggleAdd}
+          selectedSchool={filters.school}
+          selectedClass={filters.class}
+          validationOptions={columns}
+          schools={schools}
+        />
+      )}
 
       {openUpdateClass && (
         <div>

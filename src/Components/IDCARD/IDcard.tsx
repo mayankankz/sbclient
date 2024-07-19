@@ -3,6 +3,22 @@ import preview from '../../assets/images/demo/user.jpeg'
 const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
   const [workspaceDimensions, setWorkspaceDimensions] = useState(size);
 
+  function getClassExt(classVal) {
+    if (classVal == '1') {
+        return 'st';
+    }else if (['2'].includes(classVal)) {
+        return 'nd'
+    } else if (classVal == '3') {
+        return 'rd'
+    } else if (classVal == '4') {
+        return 'rth';
+    } else if (['5', '6', '7', '8', '9', '10', '11', '12'].includes(classVal)) {
+        return 'th'
+    } else {
+        return ''
+    }
+}
+
   function capitalizeWords(str) {
     str = str.toLowerCase();
   return str.replace(/\b\w/g, function(char) {
@@ -13,7 +29,7 @@ const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
     debugger
     const isCapitalize= el.styles.textTransform == 'capitalize'
    if(!isPreview){ if (el.fieldMapping && data[el.fieldMapping]) {
-      return isCapitalize ? capitalizeWords(data[el.fieldMapping]) :data[el.fieldMapping];
+      return isCapitalize ? capitalizeWords(data[el.fieldMapping]) : el.fieldMapping == "class" ? `${data[el.fieldMapping]}${getClassExt(data[el.fieldMapping])}` : data[el.fieldMapping];
     }}
     return el.content || '';
   };
@@ -37,7 +53,7 @@ const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
           style={{
             position: 'absolute',
             left: `${el.position.x}px`,
-            top: `${el.position.y}px`,
+            top: `${el.type == 'input' ? parseInt(el.position.y)+2 : el.position.y}px`,
             width: `${el.size.width}px`,
             height: `${el.size.height}px`,
             zIndex: el.zIndex,

@@ -961,7 +961,7 @@ const Editor = () => {
                   onResizeStart={handleStop}
                   onResizeStop={handleResize(index)}
                   minWidth={5}
-                  minHeight={15}
+                  minHeight={10}
                   bounds={"parent"}
                   grid={[1, 1]}
                   style={{

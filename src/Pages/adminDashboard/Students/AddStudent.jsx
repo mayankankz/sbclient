@@ -19,8 +19,8 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { apiUrl } from "../../../utils/constant";
 import Loader from "../../../Components/Loader/Loader";
-function EditStudent({isTeacher, studentsData, validationOptions, toggle, isOpen }) {
-  const [student, setStudent] = useState({ ...studentsData });
+function AddStudent({ selectedSchool,selectedClass,validationOptions, toggle, isOpen,schools }) {
+  const [student, setStudent] = useState({});
   const [validationError, setValidationError] = useState(false);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -42,16 +42,25 @@ function EditStudent({isTeacher, studentsData, validationOptions, toggle, isOpen
     "11",
     "12",
   ]);
-  debugger;
+  if(!selectedClass || !selectedSchool){
+    toast.error("Please select a class and a school");
+    return;
+  }
   useEffect(() => {
-    setStudent({ ...studentsData });
+    const objectWithEmptyValues = validationOptions.reduce((acc, column) => {
+        acc[column.title] = "";
+        return acc;
+    }, {});
+    
+    const schoolName = schools.filter(sc=> sc.schoolcode === selectedSchool)[0].schoolname
+    setStudent({ ...objectWithEmptyValues,className: selectedClass,schoolname:schoolName,schoolcode: selectedSchool });
 
     return () => {
       setFile(null);
       setPreview(null);
       setValidationError(false);
     };
-  }, [studentsData]);
+  }, []);
 
   function handleOnChange(e) {
     debugger
@@ -79,13 +88,13 @@ function EditStudent({isTeacher, studentsData, validationOptions, toggle, isOpen
   const handleFormSubmit = async () => {
     let isValid = true;
 
-    if(!isTeacher){validationOptions.forEach((option) => {
+    validationOptions.forEach((option) => {
       const { title } = option;
       if (!student[title]) {
         isValid = false;
         message.error(`${title} is required.`);
       }
-    })}
+    });
 
     if (!isValid) {
       setValidationError(true);
@@ -107,19 +116,16 @@ function EditStudent({isTeacher, studentsData, validationOptions, toggle, isOpen
 
     try {
       setIsLoading(true);
-      let url;
-      if(isTeacher){
-        url = `${apiUrl}/teacher/updateteacherdata/${student.id}`
-      }else{
-        url =`${apiUrl}/user/updatestudentdata/${student.id}`
-      }
-      const response = await axios.patch(url,formData);
 
-      if (response.data.status === "success") {
+      const response = await axios.post(
+        `${apiUrl}/app/addnewstudent`,
+        formData
+      );
+
+      if (response.data.statud === "success") {
         setIsLoading(false);
 
-        toast.success(`${isTeacher ? "Teacher" : "Student" }Data Updated Successfully.`);
-        toggle();
+        toast.success("Student Created Successfully.");
       }
     } catch (error) {
       toast.error("Unable  to update student data.");
@@ -259,4 +265,4 @@ function EditStudent({isTeacher, studentsData, validationOptions, toggle, isOpen
   );
 }
 
-export default EditStudent;
+export default AddStudent;

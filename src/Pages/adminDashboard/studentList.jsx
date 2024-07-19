@@ -51,7 +51,7 @@ const StudentList = () => {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [open, setOpen] = useState(false);
   const [openTemplates, setopenTemplates] = useState(false);
-  const [isBackSide,setIsBackSide] = useState(false);
+  const [isBackSide, setIsBackSide] = useState(false);
   const [setting, setSettings] = useState({
     pageType: "A4",
     Layout: "Portrait",
@@ -191,20 +191,117 @@ const StudentList = () => {
     let numRows = Math.ceil(students.length / studentsPerRow);
 
     for (let i = 0; i < numRows; i++) {
-        let start = i * studentsPerRow;
-        let end = start + studentsPerRow;
+      let start = i * studentsPerRow;
+      let end = start + studentsPerRow;
 
-        if (end > students.length) {
-            end = students.length;
-        }
+      if (end > students.length) {
+        end = students.length;
+      }
 
-        let row = students.slice(start, end).reverse();
-        result = result.concat(row);
+      let row = students.slice(start, end).reverse();
+      result = result.concat(row);
     }
 
     return result;
-}
+  }
 
+  const handleExportCheckList = () => {
+    setIsLoading(true);
+  
+    let studentsArr = students;
+  
+    // Dynamically identify columns from the first student object that have data
+    const tableColumns = Object.keys(studentsArr[0]).filter(
+      (key) => studentsArr[0][key] && studentsArr[0][key] !== "null"&&
+      key !== "imgUrl" && 
+      key !== "updatedAt" &&
+      key !== "createdAt"
+    );
+  
+    // Include "Image" as the first column
+    const allColumns = ["img", ...tableColumns.filter(col => col !== "img")];
+  
+    // Creating table headers
+    const tableHeaders = allColumns
+      .map((col) => `<th>${col.charAt(0).toUpperCase() + col.slice(1)}</th>`)
+      .join("");
+  
+    // Creating table rows with student data
+    const tableRows = studentsArr
+      .map((student) => {
+        return `
+          <tr>
+            ${allColumns
+              .map((col) =>
+                col === "img"
+                  ? `<td><img src="${student[col] || ''}" alt="student image" style="width: 50px; height: 50px;" /></td>`
+                  : `<td>${student[col] || ''}</td>`
+              )
+              .join("")}
+          </tr>
+        `;
+      })
+      .join("");
+  
+    // Creating the table HTML
+    const tableHtml = `
+      <table border="1" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            ${tableHeaders}
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+        </tbody>
+      </table>
+    `;
+  
+    const printHtml = `
+      <html>
+        <head>
+          <title>CheckList</title>
+          <style>
+            @page {
+              size: landscape;
+              margin: 3mm;
+              box-shadow: none;
+            }
+            body {
+              height: 100%;
+              box-sizing: border-box;
+              border: none;
+              margin: 0;
+              padding: 0;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            th, td {
+              border: 1px solid black;
+              padding: 8px;
+              text-align: left;
+            }
+          </style>
+        </head>
+        <body>
+          <h1 style="text-align : center;">${studentsArr[0]["schoolname"]}</h1>
+          ${tableHtml}
+        </body>
+      </html>
+    `;
+  
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
+  
+    printWindow.onload = () => {
+      setIsLoading(false);
+      printWindow.print();
+    };
+  };
+  
 
   const handlePrintAllIDCards = () => {
     if (!selectedTemplates.length) {
@@ -223,12 +320,10 @@ const StudentList = () => {
     if (!setting.rows && !setting.columns) {
       updateRowsAndColumns(rows, columns);
     }
-    let studentsArr = students
-   if(isBackSide){ 
-
-    studentsArr = reverseRows(students ,columns )
-
-   }
+    let studentsArr = students;
+    if (isBackSide) {
+      studentsArr = reverseRows(students, columns);
+    }
 
     const idCardsHtml = studentsArr
       .map((student) => {
@@ -257,12 +352,11 @@ const StudentList = () => {
           .join("");
       })
       .join("");
-  
-    
+
     const printHtml = `
   <html>
     <head>
-    <title>${isBackSide ? 'BACK SIDE' : 'FRONT SIDE'}</title>
+    <title>${isBackSide ? "BACK SIDE" : "FRONT SIDE"}</title>
       <style>
         @page {
           size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
@@ -341,15 +435,15 @@ const StudentList = () => {
   };
 
   function handleFrontChanage(val) {
-    setopenTemplates(true)
-    setIsBackSide(false)
+    setopenTemplates(true);
+    setIsBackSide(false);
   }
 
   function handleBackChanage(val) {
-    setopenTemplates(true)
-    setIsBackSide(true)
+    setopenTemplates(true);
+    setIsBackSide(true);
   }
-  
+
   const handlePrintIDCards = (id) => {
     debugger;
     if (!selectedTemplates.length) {
@@ -400,7 +494,7 @@ const StudentList = () => {
     const printHtml = `
     <html>
       <head>
-         <title>${isBackSide ? 'BACK SIDE' : 'FRONT SIDE'}</title>
+         <title>${isBackSide ? "BACK SIDE" : "FRONT SIDE"}</title>
         <style>
           @page {
             size: ${setting.pageType.toLocaleLowerCase()} ${setting.Layout.toLocaleLowerCase()};
@@ -450,8 +544,6 @@ const StudentList = () => {
       printWindow.print();
     };
   };
-
- 
 
   const actionColumns = [
     {
@@ -546,7 +638,9 @@ const StudentList = () => {
             <Button type="primary" onClick={() => setOpen(true)}>
               Page Settings
             </Button>
-
+            <Button type="primary" onClick={() => handleExportCheckList()}>
+              Export Checklist
+            </Button>
             <Button
               type="primary"
               onClick={handlePrintAllIDCards}
@@ -859,7 +953,7 @@ const StudentList = () => {
           rowKey="id"
           pagination={true}
           size="small"
-          style={{overflowX: 'scroll'}}
+          style={{ overflowX: "scroll" }}
         />
       )}
     </div>
