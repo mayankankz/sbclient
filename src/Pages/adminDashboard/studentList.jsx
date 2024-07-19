@@ -71,7 +71,7 @@ const StudentList = () => {
   const [filters, setFilters] = useState({
     school: "",
     class: "",
-    section: "",
+    session: new Date().getFullYear().toString(),
   });
 
   const resetSettings = () => {
@@ -142,7 +142,8 @@ const StudentList = () => {
       setLoadingStudents(true);
       const response = await getAllStudentBySchool(
         filters.school,
-        filters.class
+        filters.class,
+        filters.session
       );
       const studentsData = response.students;
       setStudents(studentsData);
@@ -621,6 +622,23 @@ const StudentList = () => {
               </Option>
             ))}
           </Select>
+
+          <Select
+          placeholder="Select Session"
+          style={{ width: 120 }}
+          value={filters.session}
+          onChange={(value) => handleFilterChange("session", value)}
+          allowClear
+          required
+         
+        >
+          <Option value="">Select Session</Option>
+          {["2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"].map((y) => (
+            <Option  key={y} value={y}>
+              {y}
+            </Option>
+          ))}
+        </Select>
           <Button type="primary" onClick={async () => await fetchStudents()}>
             Fetch Data
           </Button>

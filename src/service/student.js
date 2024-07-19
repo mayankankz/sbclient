@@ -11,14 +11,14 @@ export const getAllSchool = async (data) => {
   }
 };
 
-export const getAllStudentBySchool = async (schoolId, className) => {
+export const getAllStudentBySchool = async (schoolId, className,session) => {
   
   try {
     let url;
     if(className === "Teachers"){
       url = `${apiUrl}/teacher/getalltechersdatawithimages/${schoolId}`
     }else{
-      url = `${apiUrl}/user/getallstudentsdatawithimages/${schoolId}/${className}`
+      url = `${apiUrl}/user/getallstudentsdatawithimages/${schoolId}/${className}?session=${session}`
       
     }
     const response = await api.get(url);
