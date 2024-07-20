@@ -310,7 +310,7 @@ const StudentList = () => {
       return;
     }
     setIsLoading(true);
-
+debugger
     const isVertical =
       templates.filter((tpl) => tpl.id === selectedTemplates[0])[0].layout ===
       "Vertical";

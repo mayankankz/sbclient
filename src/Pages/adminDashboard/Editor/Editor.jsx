@@ -535,7 +535,6 @@ const Editor = () => {
     }));
   };
 
-  function handleMarginChange(margin) {}
 
   const handleParentStyleChange = (property, value) => {
     debugger;
@@ -594,6 +593,16 @@ const Editor = () => {
     const newElements = elements.map((el) => {
       if (el.id === selectedElementId) {
         return { ...el, content };
+      }
+      return el;
+    });
+    setElements(newElements);
+  };
+
+  const handleSizeChange = (size) => {
+    const newElements = elements.map((el) => {
+      if (el.id === selectedElementId) {
+        return { ...el, size };
       }
       return el;
     });
@@ -1154,6 +1163,7 @@ const Editor = () => {
                 availableFields={availableFields}
                 handleFieldMappingChange={handleFieldMappingChange}
                 handleMarginAdjust={handleMarginAdjust}
+                handleSizeChange={handleSizeChange}
               />
             </OffcanvasBody>
           </Offcanvas>

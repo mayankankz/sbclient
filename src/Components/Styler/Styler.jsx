@@ -17,6 +17,7 @@ const Styler = ({
   handleParentStyleChange,
   availableFields,
   handleFieldMappingChange,
+  handleSizeChange
 }) => {
   const styleOptions = [
     { label: "Background Color", property: "backgroundColor", type: "color" },
@@ -234,6 +235,46 @@ const Styler = ({
                 ""
               }
               onChange={(e) => handleContentChange(e.target.value)}
+            />
+          </div>
+        )}
+
+        {elements.find((el) => el.id === selectedElementId) &&  (
+          <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+            <label
+              className="form-label mb-0"
+              style={{ width: "35%", fontSize: "15px" }}
+            >
+              Width
+            </label>
+            <input
+              style={{ width: "35%" }}
+              type="text"
+              value={
+                elements.find((el) => el.id === selectedElementId)?.size.width ||
+                0
+              }
+              onChange={(e) => handleSizeChange({...elements.find((el) => el.id === selectedElementId)?.size,width: e.target.value})}
+            />
+          </div>
+        )}
+
+        {elements.find((el) => el.id === selectedElementId) &&  (
+          <div className="d-flex justify-content-between align-items-center col-md-12 mb-1">
+            <label
+              className="form-label mb-0"
+              style={{ width: "35%", fontSize: "15px" }}
+            >
+              Height
+            </label>
+            <input
+              style={{ width: "35%" }}
+              type="text"
+              value={
+                elements.find((el) => el.id === selectedElementId)?.size.height ||
+                0
+              }
+              onChange={(e) => handleSizeChange({...elements.find((el) => el.id === selectedElementId)?.size,height: e.target.value})}
             />
           </div>
         )}
