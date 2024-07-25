@@ -1,15 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Draggable from "react-draggable";
 import { Resizable } from "re-resizable";
 import "react-resizable/css/styles.css";
 import {
+  CancelOutlined,
   CloseOutlined,
   DragIndicator,
+  EditNote,
   UploadOutlined,
 } from "@mui/icons-material";
 import {
   Button,
   ButtonGroup,
+  Col,
+  Container,
+  FormGroup,
   Label,
   Modal,
   ModalBody,
@@ -17,6 +22,7 @@ import {
   Offcanvas,
   OffcanvasBody,
   OffcanvasHeader,
+  Row,
 } from "reactstrap";
 import "./editor.css";
 import { TfiHandDrag } from "react-icons/tfi";
@@ -25,13 +31,21 @@ import { useReactToPrint } from "react-to-print";
 import ContextMenu from "../../../Components/ContexctMenu";
 import GuideLines from "../../../Components/GuildeLines/GuildLines";
 import uniqid from "uniqid";
-import { addTemplate, getAllTemplate } from "../../../service/idcard";
+import {
+  addTemplate,
+  getAllTemplate,
+  updateTemplate,
+} from "../../../service/idcard";
 import IDcard from "../../../Components/IDCARD/IDcard";
 import { toast } from "react-toastify";
-import preview from "../../../assets/images/demo/preview.jpg";
-import { Input, Upload } from "antd";
+import preview from "../../../assets/images/demo/user.jpeg";
+import { Input, Popconfirm, Upload } from "antd";
 import Styler from "../../../Components/Styler/Styler";
 import { Button as AntdButton } from "antd";
+import ImageUploadModal from "../../../Components/Modal/ImageUpload";
+import { Modal as antdModel } from "antd";
+const { confirm } = antdModel;
+import { BsUpload } from "react-icons/bs";
 import { Rnd } from "react-rnd";
 const Editor_ = () => {
   const [elements, setElements] = useState([]);
@@ -48,6 +62,7 @@ const Editor_ = () => {
   const offcanvasRef = useRef(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [flag, setFlag] = useState(true);
+  const [openTemplates, setOpenTemplates] = useState(false);
   const availableFields = [
     "studentname",
     "fathersname",
@@ -62,8 +77,20 @@ const Editor_ = () => {
     "dob",
     "section",
     "housename",
+    "name",
+    "husbandname",
+    "email",
+    "empid",
+    "designation",
+    "Bloodgroup",
+    "other1",
+    "other2",
+    "other3",
+    "validfrom",
+    "validTill",
   ];
   const contentToPrint = useRef(null);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [contextMenu, setContextMenu] = useState({
     visible: false,
     x: 0,
@@ -71,14 +98,29 @@ const Editor_ = () => {
     elementId: null,
   });
   const [guideLines, setGuideLines] = useState([]);
+  const [name, setName] = useState("");
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [openConfirmUpdate, setOpenConfirmUpdate] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [updateID, setUpdateId] = useState("");
+  const isDragged = useRef(false);
+
+  const toggleModal = () => setIsUploadOpen(!isUploadOpen);
+  const toggleTemplate = () => {
+    debugger;
+    setOpenTemplates(!openTemplates);
+  };
   function resetAll() {
     setElements([]);
     setSelectedElementId([]);
     setStyles({});
-    setBackgroundImage | null;
+    setBackgroundImage(null);
+    setName("");
   }
-
+console.log('====================================');
+console.log('rerender');
+console.log('====================================');
   const handlePrint = useReactToPrint({
     documentTitle: "Print This Document",
     onBeforePrint: () => console.log("before printing..."),
@@ -90,11 +132,34 @@ const Editor_ = () => {
   };
 
   const handleRightClick = (event, elementId) => {
+    debugger;
     event.preventDefault();
+
+    const menuWidth = 250;
+    const menuHeight = 380;
+    const padding = 10;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let x = event.clientX;
+    if (x + menuWidth + padding > viewportWidth) {
+      x = viewportWidth - menuWidth - padding;
+    } else if (x < padding) {
+      x = padding;
+    }
+
+    let y = event.clientY;
+    if (y + menuHeight + padding > viewportHeight) {
+      y = viewportHeight - menuHeight - padding;
+    } else if (y < padding) {
+      y = padding;
+    }
+
     setContextMenu({
       visible: true,
-      x: event.clientX,
-      y: event.clientY,
+      x,
+      y,
       elementId,
     });
   };
@@ -249,7 +314,7 @@ const Editor_ = () => {
     }
   }, [layout]);
 
-  const addElement = (type) => {
+  const addElement = (type, imgURl = "") => {
     const newElement = {
       id: uniqid(),
       type,
@@ -262,12 +327,18 @@ const Editor_ = () => {
           ? preview
           : "",
       position: { x: 0, y: 0 },
+      imgURl: imgURl,
       size: {
         width: type === "image" ? 50 : 100,
         height: type === "image" ? 50 : 10,
       },
       parentStyle: {},
-      styles: { fontSize: "10px" },
+      styles: {
+        fontSize: "10px",
+        whiteSpace: "nowrap",
+        textTransform: "none",
+        ObjectFit: "contain",
+      },
       zIndex: elements.length,
       fieldMapping: "",
     };
@@ -298,23 +369,26 @@ const Editor_ = () => {
     }
   };
 
-  const handleDrag =
-    (index) =>
-    (e, { x, y }) => {
-      debugger;
-      const newElements = [...elements];
-      const draggedElement = { ...newElements[index], position: { x, y } };
-      const snapPosition = calculateGuideLines(draggedElement, "drag");
-
-      newElements[index].position = snapPosition.position;
-      setGuideLines(snapPosition.lines);
-      setElements(newElements);
-    };
-
-  const handleStop = () => {
-    setGuideLines([]);
+  const handleDrag__ = (data) => {
+    
   };
 
+
+  const handleDragStop = useCallback((index) => (e, d) => {
+    isDragged.current = false;
+    setElements((prevElements) => {
+      const newElements = [...prevElements];
+      newElements[index] = {
+        ...newElements[index],
+        position: {
+          left: d.x,
+          top: d.y,
+        },
+      };
+      return newElements;
+    });
+  }, [elements,setElements]);
+  
   const MAGNETIC_THRESHOLD = 5;
 
   const calculateGuideLines = (element, type) => {
@@ -430,30 +504,21 @@ const Editor_ = () => {
     }
   };
 
-  const handleResizeStop = () => {
-    setGuideLines([]);
-  };
 
-  const handleResize = (index) => (e, direction, ref, d) => {
-    const newElements = [...elements];
-    const resizedElement = {
-      ...newElements[index],
-      size: {
-        width: newElements[index].size.width + d.width,
-        height: newElements[index].size.height + d.height,
-      },
-    };
-  
-    const snapResult = calculateGuideLines(resizedElement, "resize");
-  
-    newElements[index].size = snapResult.size;
-    newElements[index].position.x += d.width;  // Adjust x position based on width change
-    newElements[index].position.y += d.height; // Adjust y position based on height change
-  
-    setGuideLines(snapResult.lines);
-    setElements(newElements);
-  };
-  
+  const handleResizeStop = useCallback((index) => (e, direction, ref, delta, position) => {
+    setElements((prevElements) => {
+      const newElements = [...prevElements];
+      newElements[index] = {
+        ...newElements[index],
+        size: {
+          width: ref.style.width,
+          height: ref.style.height,
+        },
+        position,
+      };
+      return newElements;
+    });
+  }, [elements,setElements]);
 
   const handleStyleChange = (property, value) => {
     debugger;
@@ -479,16 +544,36 @@ const Editor_ = () => {
 
   const handleParentStyleChange = (property, value) => {
     debugger;
+    if (value == "-px" || !value || value == "px") {
+      value = 0;
+    } else {
+      value = parseInt(value.replace("px", ""));
+    }
+
     const newElements = elements.map((el) => {
+      debugger;
       if (el.id === selectedElementId) {
-        const xaxis =
-          property == "marginLeft"
-            ? el.position.x + parseInt(value.replace("px", ""))
-            : el.position.x;
-        const yaxis =
-          property == "marginTop"
-            ? el.position.y + parseInt(value.replace("px", ""))
-            : el.position.y;
+        let xaxis = el.position.x;
+        let yaxis = el.position.y;
+
+        // Calculate new positions based on the property
+        switch (property) {
+          case "marginLeft":
+            xaxis += value;
+            break;
+          case "marginRight":
+            xaxis -= value;
+            break;
+          case "marginTop":
+            yaxis += value;
+            break;
+          case "marginBottom":
+            yaxis -= value;
+            break;
+
+          default:
+            break;
+        }
 
         return {
           ...el,
@@ -503,6 +588,7 @@ const Editor_ = () => {
     });
 
     setElements(newElements);
+
     setStyles((prevStyles) => ({
       ...prevStyles,
       [property]: value,
@@ -513,6 +599,16 @@ const Editor_ = () => {
     const newElements = elements.map((el) => {
       if (el.id === selectedElementId) {
         return { ...el, content };
+      }
+      return el;
+    });
+    setElements(newElements);
+  };
+
+  const handleSizeChange = (size) => {
+    const newElements = elements.map((el) => {
+      if (el.id === selectedElementId) {
+        return { ...el, size };
       }
       return el;
     });
@@ -535,15 +631,50 @@ const Editor_ = () => {
       elements: elements.map((el) => ({ ...el })),
       layout,
       backgroundImage,
+      styles,
+      name,
     };
 
     try {
+      setLoading(true);
       const response = await addTemplate(templateData);
+      setUpdateId("");
+      setOpenConfirm(false);
+      setOpenConfirmUpdate(false);
       resetAll();
+
       toast.success("Template saved successfully.");
     } catch (error) {
       toast.error("Something went wrong.");
       console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editTemplate = async () => {
+    const templateData = {
+      elements: elements.map((el) => ({ ...el })),
+      layout,
+      backgroundImage,
+      styles,
+      id: updateID,
+    };
+
+    try {
+      setLoading(true);
+      const response = await updateTemplate(templateData);
+      setUpdateId("");
+      setOpenConfirm(false);
+      setOpenConfirmUpdate(false);
+      resetAll();
+
+      toast.success("Template updated successfully.");
+    } catch (error) {
+      toast.error("Something went wrong.");
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -558,13 +689,19 @@ const Editor_ = () => {
   };
 
   const loadTemplate = (templateId) => {
+    debugger;
     const template = templates.find((t) => t.id === templateId);
     if (template) {
-      setElements(JSON.parse(template.elements));
+      debugger;
+      setUpdateId(templateId);
+      setElements(template.elements);
+      setStyles(template.styles);
       setLayout(template.layout);
       setBackgroundImage(template.backgroundImage);
+      setOpenTemplates(false);
     }
   };
+
   const handleBackgroundImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -583,6 +720,103 @@ const Editor_ = () => {
   useEffect(() => {
     fetchTemplates();
   }, []);
+
+  const handleClick = (event, id) => {
+    debugger
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (event.shiftKey) {
+      setSelectedElementId((prev) => [...prev, id]);
+    } else {
+      setSelectedElementId([id]);
+    }
+  };
+  
+
+  const handleKeyDown = (event) => {
+    debugger
+    if (selectedElementId.length > 0) {
+      const step = 1;
+      let direction = { x: 0, y: 0 };
+      switch (event.key) {
+        case "ArrowUp":
+          direction.y = -step;
+          break;
+        case "ArrowDown":
+          direction.y = step;
+          break;
+        case "ArrowLeft":
+          direction.x = -step;
+          break;
+        case "ArrowRight":
+          direction.x = step;
+          break;
+        default:
+          return;
+      }
+
+      setElements((prevElements) =>
+        prevElements.map((el) => {
+          if (selectedElementId.includes(el.id)) {
+            return {
+              ...el,
+              position: {
+                x: el.position.x + direction.x,
+                y: el.position.y + direction.y,
+              },
+            };
+          }
+          return el;
+        })
+      );
+    }
+  };
+
+  const handleMarginAdjust = (type, val) => {
+    if (selectedElementId.length > 0) {
+      let direction = { x: 0, y: 0 };
+      switch (type) {
+        case "top":
+          direction.y += val;
+          break;
+        case "bottom":
+          direction.y -= val;
+          break;
+        case "left":
+          direction.x += val;
+          break;
+        case "right":
+          direction.x -= val;
+          break;
+        default:
+          return;
+      }
+
+      setElements((prevElements) =>
+        prevElements.map((el) => {
+          if (selectedElementId.includes(el.id)) {
+            return {
+              ...el,
+              position: {
+                x: el.position.x + direction.x,
+                y: el.position.y + direction.y,
+              },
+            };
+          }
+          return el;
+        })
+      );
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedElementId]);
+  
 
   return (
     <>
@@ -620,48 +854,100 @@ const Editor_ = () => {
               Add Image
             </button>
             {/*<button className='button-17' onClick={() => addElement('box')}>Add Box</button> */}
-            <button className="button-17" onClick={() => setElements([])}>
+            <button className="button-17" onClick={() => resetAll()}>
               Clear All
             </button>
-            <button className="button-17" onClick={saveTemplate}>
-              Save Template
+            <button className="button-17 " onClick={toggleModal}>
+              <BsUpload size={25} className="mr-5" /> <span>Upload Assets</span>
             </button>
+
             <button className="button-17" onClick={togglePreview}>
               Preview
             </button>
           </div>
-          <div className="background-uploader mt-5">
-            {backgroundImage ? (
-              <div>
-                <button
-                  className="button-17"
+          <Container className="col-md-12 mt-5">
+            <FormGroup className="mb-5">
+              <Label for="formFile" className="form-label">
+                Upload Design
+              </Label>
+              <div className="d-flex align-items-center gap-2">
+                <Input
+                  style={{ height: "52px" }}
+                  type="file"
+                  id="formFile"
+                  onChange={handleBackgroundImageChange}
+                />
+                <CancelOutlined
                   onClick={() => setBackgroundImage(null)}
+                  size={25}
+                />
+              </div>
+            </FormGroup>
+          </Container>
+          <div className="row mt-5 ">
+            {!updateID ? (
+              <div className="col-md-12">
+                <Popconfirm
+                  title="Enter template Name."
+                  description=<Input
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  open={openConfirm}
+                  onConfirm={saveTemplate}
+                  okButtonProps={{
+                    loading: loading,
+                  }}
+                  onCancel={() => setOpenConfirm(false)}
                 >
-                  Remove Background
-                </button>
+                  <button
+                    className="button-17 w-100 d-flex gap-2"
+                    onClick={() => setOpenConfirm(true)}
+                  >
+                    Save Template
+                  </button>
+                </Popconfirm>
               </div>
             ) : (
-              <div>
-                <label>Upload Design</label>
-
-                <AntdButton icon={<UploadOutlined />}>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleBackgroundImageChange}
-                  />
-                </AntdButton>
+              <div className="col-md-12">
+                <Popconfirm
+                  title="Are you sure want to save."
+                  open={openConfirmUpdate}
+                  onConfirm={editTemplate}
+                  okButtonProps={{
+                    loading: loading,
+                  }}
+                  onCancel={() => setOpenConfirmUpdate(false)}
+                >
+                  <button
+                    className="button-17 w-100 d-flex gap-2"
+                    onClick={() => setOpenConfirmUpdate(true)}
+                  >
+                    Update Template
+                  </button>
+                </Popconfirm>
               </div>
             )}
           </div>
-          <h1>Testing</h1>
+
+          <div className="row mt-5 ">
+            <div className="col-md-12">
+              <button
+                className="button-17 w-100 d-flex gap-2"
+                onClick={toggleTemplate}
+              >
+                <EditNote size={25} className="mr-5" />{" "}
+                <span>Previous IDCARD</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div
           style={{
             width: "75%",
-            height: "100%",
+           
             display: "flex",
+            justifyContent: "center",
             alignItems: "center",
             transition: "margin-right 0.3s ease",
             marginRight: isOpen ? "20%" : "0",
@@ -669,6 +955,7 @@ const Editor_ = () => {
         >
           <div
             className="workspace"
+            onClick={() => setSelectedElementId([])}
             style={{
               scale: "2",
               width: `${workspaceDimensions.width}mm`,
@@ -684,177 +971,112 @@ const Editor_ = () => {
               backgroundPosition: "center",
             }}
           >
-            {elements.map((el, index) => (
-              <Rnd
-                key={el.id}
-                position={el.position}
-                onStop={handleStop}
-                onDragStop={handleDrag(index)}
-                onResizeStop={handleResize(index)}
-                onResizeStart={handleStop}
-                bounds=".workspace"
-                resizeGrid={[1, 1]}
-                dragGrid={[1, 1]}
-                minWidth={5}
-                minHeight={15}
-               
-                size={{ width: el.size.width, height: el.size.height }}
-                resizeHandleStyles={{
-                  top: {
-                    marginTop: -1,
-                    marginLeft: -9,
-                    top: 0,
-                    left: "50%",
-                    cursor: "ns-resize",
-                    border: "3px solid #999",
-                    borderLeft: "none",
-                    borderRight: "none",
-                    borderBottom: "none",
-                    borderWidth: 1,
-                    borderColor: "#4d4d4d",
-                    width: 10,
-                    height: 10,
-                    boxSizing: "border-box",
-                    zIndex: 1,
-                  },
-                  left: {
-                    marginTop: -4,
-                    marginLeft: -1,
-                    top: "50%",
-                    left: 0,
-                    cursor: "ew-resize",
-                    border: "3px solid #999",
-                    borderTop: "none",
-                    borderRight: "none",
-                    borderBottom: "none",
-                    borderWidth: 1,
-                    borderColor: "#4d4d4d",
-                    width: 10,
-                    height: 10,
-                    boxSizing: "border-box",
-                    zIndex: 1,
-                  },
-                  bottom: {
-                    marginTop: -9,
-                    marginLeft: -9,
-                    top: "100%",
-                    left: "50%",
-                    cursor: "ns-resize",
-                    border: "3px solid #999",
-                    borderLeft: "none",
-                    borderRight: "none",
-                    borderTop: "none",
-                    borderWidth: 1,
-                    borderColor: "#4d4d4d",
-                    width: 10,
-                    height: 10,
-                    boxSizing: "border-box",
-                    zIndex: 1,
-                  },
-                  right: {
-                    marginTop: -4,
-                    marginLeft: -9,
-                    top: "50%",
-                    left: "100%",
-                    cursor: "ew-resize",
-                    border: "3px solid #999",
-                    borderTop: "none",
-                    borderLeft: "none",
-                    borderBottom: "none",
-                    borderWidth: 1,
-                    borderColor: "#4d4d4d",
-                    width: 10,
-                    height: 10,
-                    boxSizing: "border-box",
-                    zIndex: 1,
-                  },
-                }}
-                resizeHandleComponent={{
-                  topLeft: <ResizeHandle />,
-                  topRight: <ResizeHandle />,
-                  bottomLeft: <ResizeHandle />,
-                  bottomRight: <ResizeHandle />,
-                }}
-                enableResizing={{
-                  top: selectedElementId?.includes(el.id) ? true : false,
-                  right: selectedElementId?.includes(el.id) ? true : false,
-                  bottom: selectedElementId?.includes(el.id) ? true : false,
-                  left: selectedElementId?.includes(el.id) ? true : false,
-                  topRight: selectedElementId?.includes(el.id) ? true : false,
-                  bottomRight: selectedElementId?.includes(el.id)
-                    ? true
-                    : false,
-                  bottomLeft: selectedElementId?.includes(el.id) ? true : false,
-                  topLeft: selectedElementId?.includes(el.id) ? true : false,
-                }}
-                
-                onContextMenu={(e) => handleRightClick(e, el.id)}
+          {elements.map((el, index) => (
+            <Rnd
+              key={el.id}
+              position={{ x: el.position?.left || 0, y: el.position?.top || 0 }}
+              dragAxis="both"
+              onDragStart={() => {
+                isDragged.current = true;
+              }}
+              onDrag={handleDragStop(index)}
+              bounds=".workspace"
+              dragGrid={[1, 1]}
+              resizeGrid={[1, 1]}
+              onMouseDownCapture={() => setFlag(true)}
+              onMouseUpCapture={() => setFlag(false)}
+              size={{ width: el.size.width, height: el.size.height }}
+              onResizeStop={handleResizeStop(index)}
+              style={{
+                position: 'absolute',
+                border: '1px solid #ddd',
+                zIndex: el.zIndex,
+                ...el.parentStyle,
+              }}
+              resizeHandleClasses={{
+                bottom: "handle long-handle-horizontal bottom-handle",
+                bottomLeft: 'handle left-handle bottom-handle',
+                bottomRight: 'handle right-handle bottom-handle',
+                left: 'handle long-handle left-handle',
+                right: 'handle long-handle right-handle',
+                top: 'handle long-handle-horizontal top-handle',
+                topLeft: 'handle left-handle top-handle',
+                topRight: 'handle right-handle top-handle',
+              }}
+              handleComponent={{
+                topLeft: <ResizeHandle />,
+                topRight: <ResizeHandle />,
+                bottomLeft: <ResizeHandle />,
+                bottomRight: <ResizeHandle />,
+              }}
+              dragHandleClassName="drag-handle"
+              
+              onContextMenu={(e) => handleRightClick(e, el.id)}
+              enableResizing={{
+                top: selectedElementId?.includes(el.id),
+                right: selectedElementId?.includes(el.id),
+                bottom: selectedElementId?.includes(el.id),
+                left: selectedElementId?.includes(el.id),
+                topRight: selectedElementId?.includes(el.id),
+                bottomRight: selectedElementId?.includes(el.id),
+                bottomLeft: selectedElementId?.includes(el.id),
+                topLeft: selectedElementId?.includes(el.id),
+              }}
+tabIndex={0}
+            >
+              <div
+              onClick={(event) => handleClick(event, el.id)}
+
+                className={`element ${el.type}`}
                 style={{
-                  position: "absolute",
-                  border: "1px solid #ddd",
-                  zIndex: el.zIndex,
-                  ...el.parentStyle,
+                  width: '100%',
+                  height: '100%',
+                  overflow: el.type === 'image' ? '' : 'hidden',
+                  whiteSpace: 'nowrap',
+                  cursor : 'default'
                 }}
               >
-                <div
-                  onClick={(event) => {
-                    const idToAdd = el.id;
-                    if (event.shiftKey) {
-                      setSelectedElementId((prev) => [...prev, idToAdd]);
-                    } else {
-                      setSelectedElementId([idToAdd]);
-                    }
-                  }}
-                  className={`element ${el.type}`}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    overflow: "hidden",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {selectedElementId?.includes(el.id) && (
-                    <div
-                      className="drag-handle"
-                      style={{
-                        cursor: "move",
-                        position: "absolute",
-                        bottom: "-20px",
-                        right: "50%",
-                      }}
-                    >
-                      <TfiHandDrag style={{ zIndex: 999 }} />
-                    </div>
-                  )}
-                  {el.type === "label" && (
-                    <div
-                      style={{ ...el.styles, width: "100%", height: "100%" }}
-                    >
-                      {el.content}
-                    </div>
-                  )}
-                  {el.type === "input" && (
-                    <div
-                      style={{ ...el.styles, width: "100%", height: "100%" }}
-                    >
-                      {el.content}
-                    </div>
-                  )}
-                  {el.type === "image" && (
-                    <img
-                      src={preview}
-                      alt="img"
-                      style={{ ...el.styles, width: "100%", height: "100%" }}
-                    />
-                  )}
-                  {el.type === "box" && (
-                    <div
-                      style={{ ...el.styles, width: "100%", height: "100%" }}
-                    ></div>
-                  )}
-                </div>
-              </Rnd>
-            ))}
+                {selectedElementId?.includes(el.id) && (
+                  <div
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      event.preventDefault()
+                    }}
+                    className="drag-handle"
+                    style={{
+                      cursor: 'move',
+                      position: 'absolute',
+                      bottom: '-20px',
+                      right: '50%',
+                    }}
+                  >
+                    <TfiHandDrag style={{ zIndex: 999 }} />
+                  </div>
+                )}
+                {el.type === 'label' && (
+                  <div style={{ ...el.styles, width: '100%', height: '100%' }}>
+                    {el.content}
+                  </div>
+                )}
+                {el.type === 'input' && (
+                  <div style={{ ...el.styles, width: '100%', height: '100%' }}>
+                    {el.content}
+                  </div>
+                )}
+                {el.type === 'image' && (
+                  <img
+                    src={el.imgURl ? el.imgURl : preview}
+                    alt="img"
+                    style={{ ...el.styles, width: '100%', height: '100%' }}
+                  />
+                )}
+                {el.type === 'box' && (
+                  <div style={{ ...el.styles, width: '100%', height: '100%' }}></div>
+                )}
+              </div>
+            </Rnd>
+          ))}
+          
             <GuideLines
               lines={guideLines}
               containerSize={workspaceDimensions}
@@ -884,6 +1106,8 @@ const Editor_ = () => {
                 handleContentChange={handleContentChange}
                 availableFields={availableFields}
                 handleFieldMappingChange={handleFieldMappingChange}
+                handleMarginAdjust={handleMarginAdjust}
+                handleSizeChange={handleSizeChange}
               />
             </OffcanvasBody>
           </Offcanvas>
@@ -895,7 +1119,7 @@ const Editor_ = () => {
         <ModalBody
           ref={contentToPrint}
           style={{
-            height: "600px",
+            height: "700px",
 
             display: "flex",
             alignItems: "center",
@@ -914,7 +1138,7 @@ const Editor_ = () => {
                   ? { width: 55, height: 87 }
                   : { width: 87, height: 55 }
               }
-              elements={JSON.stringify(elements)}
+              elements={elements}
               backgroundImage={backgroundImage}
               layout={layout}
               isPreview={true}
@@ -922,14 +1146,6 @@ const Editor_ = () => {
           </div>
         </ModalBody>
       </Modal>
-      {/* <div className="template-list" style={{ marginLeft: '20px' }}>
-        <h3>Saved Templates</h3>
-        {templates.map(template => (
-        <div key={template.id} className="template-item">
-          <button onClick={() => loadTemplate(template.id)}>Load Template {template.id}</button>
-        </div>
-      ))}
-    </div> */}
 
       {contextMenu.visible && (
         <ContextMenu
@@ -946,6 +1162,52 @@ const Editor_ = () => {
           onAlignBottom={() => handleContextMenuAction("alignBottom")}
         />
       )}
+
+      {isUploadOpen && (
+        <ImageUploadModal
+          addElement={addElement}
+          isOpen={isUploadOpen}
+          toggle={toggleModal}
+        />
+      )}
+
+      <div>
+        <Modal
+          size={"xl"}
+          isOpen={openTemplates}
+          toggle={toggleTemplate}
+          title="Select IDCARD"
+        >
+          <ModalHeader toggle={toggleTemplate}>Upload Images</ModalHeader>
+
+          <Container>
+            <Row>
+              {templates.map((template) => (
+                <Col lg={4} md={4}>
+                  <div
+                    onClick={() => loadTemplate(template.id)}
+                    style={{ scale: "0.7" }}
+                  >
+                    <IDcard
+                      size={
+                        template.layout == "Vertical"
+                          ? { width: 55, height: 87 }
+                          : { width: 87, height: 55 }
+                      }
+                      backgroundImage={template.backgroundImage}
+                      elements={template.elements}
+                      isPreview={true}
+                    />
+                    <div className="text-center" style={{ fontSize: "25px" }}>
+                      {template.name}
+                    </div>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </Container>
+        </Modal>
+      </div>
     </>
   );
 };

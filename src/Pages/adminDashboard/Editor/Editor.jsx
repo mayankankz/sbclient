@@ -501,8 +501,8 @@ const Editor = () => {
     const resizedElement = {
       ...newElements[index],
       size: {
-        width: newElements[index].size.width + d.width,
-        height: newElements[index].size.height + d.height,
+        width: Number(newElements[index].size.width) + d.width,
+        height: Number(newElements[index].size.height) + d.height,
       },
     };
     const snapSize = calculateGuideLines(resizedElement, "resize");

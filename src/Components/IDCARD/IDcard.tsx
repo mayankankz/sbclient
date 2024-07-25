@@ -53,7 +53,7 @@ const IDcard = ({ size, backgroundImage, elements, data ,isPreview=false }) => {
           style={{
             position: 'absolute',
             left: `${el.position.x}px`,
-            top: `${el.type == 'input' ? parseInt(el.position.y)+2 : el.position.y}px`,
+            top: `${el.type == 'input' ? parseInt(el.position.y) : el.position.y}px`,
             width: `${el.size.width}px`,
             height: `${el.size.height}px`,
             zIndex: el.zIndex,

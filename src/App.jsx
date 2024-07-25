@@ -54,6 +54,7 @@ import PrivateRoute from "./Pages/adminDashboard/PrivateRoutes";
 import Editor_ from "./Pages/adminDashboard/Editor/Editor_";
 import ErrorBoundary from "antd/es/alert/ErrorBoundary";
 import StudentInfo from "./Pages/adminDashboard/Students/StudentInfo";
+import Users from "./Pages/adminDashboard/Users/Users";
 function App() {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
@@ -171,6 +172,8 @@ function App() {
                   <Route path="editor" element={<Editor />} />
                   <Route path="addstudent" element={<StudentInfo />} />
                   <Route path="studentlist" element={<StudentList />} />
+                  <Route path="users" element={<Users />} />
+
                 </Route>
                 <Route path="/login" element={<SignIn />} />
                 {/* <Route path="/:mediaType/:id" element={<Details />} />

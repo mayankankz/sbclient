@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation, useNavigate, useNavigation } from 'react-router-dom';
 import { Breadcrumb, Layout, Menu, theme, ConfigProvider, Button, Tooltip,Modal } from 'antd';
-import { LogoutOutlined } from '@mui/icons-material';
+import { LogoutOutlined, VerifiedUser } from '@mui/icons-material';
 import { logout } from '../../store/reducer/portFolioReducer';
 import { useDispatch } from 'react-redux';
 import { persistor } from '../../main';
@@ -35,9 +35,10 @@ const items = [
   getItem('Student', 'sub1', <UserOutlined />, [
     getItem('Manage Student', '3', null, null, '/admin/addstudent'),
     getItem('Generate ID Cards', '4', null, null, '/admin/studentlist'),
-    getItem('Check List', '5', null, null, '/admin/checklist'),
+    
   ], '/admin/addstudent'),
-  getItem('Create School', '9', <HomeOutlined />, null, '/admin/create-school'),
+  getItem('Users', '9', <VerifiedUser />, null, '/admin/users'),
+
 ];
 
 const AdminLayout = () => {
