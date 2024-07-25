@@ -27,7 +27,7 @@ function EditUser({ studentsData, validationOptions, toggle, isOpen }) {
   debugger;
   useEffect(() => {
     setStudent({ ...studentsData });
-    setOptions(JSON.parse(JSON.parse(student['validationoptions'])))
+    setOptions(JSON.parse(student['validationoptions']))
     return () => {
       setValidationError(false);
     };
@@ -124,7 +124,7 @@ function EditUser({ studentsData, validationOptions, toggle, isOpen }) {
                   allowClear
                   
                   placeholder="Please select"
-                  defaultValue={JSON.parse(JSON.parse(student['validationoptions']))}
+                  defaultValue={JSON.parse(student['validationoptions'])}
                   onChange={handleChange}
                   options={[
                     { label: 'Student Name', value: 'studentname' },
