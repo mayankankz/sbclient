@@ -29,7 +29,25 @@ const ImageUploadModal = ({ isOpen, toggle, addElement }) => {
   useEffect(() => {
     fetchImages();
   }, []);
-
+  const deleteImage = (fileName) => {
+    fetch(`${apiUrl}/api/images/${fileName}`, {
+      method: 'DELETE',
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to delete image');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log(data.message);
+        // Optionally, refresh the image list after deletion
+        fetchImages();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  };
   const handleImageUpload = async (event) => {
     const formData = new FormData();
     formData.append("image", event.target.files[0]);
@@ -80,7 +98,7 @@ const ImageUploadModal = ({ isOpen, toggle, addElement }) => {
             />
             <div className="d-flex justify-content-between" style={{maxWidth: '120px'}}>
             <p style={{fontSize: 10}}>{image.fileName.slice(0,15) + "..."}</p>
-            <DeleteOutline fontSize="25px" />
+            <DeleteOutline fontSize="25px" onClick={() => deleteImage(image.fileName)} />
             </div>
             </div>
             </>
