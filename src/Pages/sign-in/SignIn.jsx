@@ -37,6 +37,8 @@ function SignIn() {
           if (response.data.userDetails.isAdmin) {
             setLoading(false);
             localStorage.setItem('auth', true);
+            localStorage.setItem('classes', JSON.stringify(response.data.userDetails.classes));
+
             navigate("/admin/");
           } else {
             setLoading(false);

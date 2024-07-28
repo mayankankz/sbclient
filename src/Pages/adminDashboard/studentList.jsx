@@ -27,24 +27,9 @@ const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [schools, setSchools] = useState([]);
   const [columns, setColums] = useState([]);
-  const [classes, setClasses] = useState([
-    "Teachers",
-    "Nursery",
-    "KG 1",
-    "KG 2",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-  ]);
+  const [classes, setClasses] = useState([{label:'Teachers',value:"Teachers" },...JSON.parse(localStorage.getItem('classes'))]);
+
+
   const [sections, setSections] = useState([]);
   const [selectedTemplates, setSelectedTemplates] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -617,8 +602,8 @@ debugger
           >
             <Option value="">Select Class</Option>
             {classes.map((cls) => (
-              <Option key={cls} value={cls}>
-                {cls}
+              <Option key={cls.value} value={cls.value}>
+                {cls.label}
               </Option>
             ))}
           </Select>

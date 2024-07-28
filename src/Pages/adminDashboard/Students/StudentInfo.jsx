@@ -24,24 +24,7 @@ const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [schools, setSchools] = useState([]);
   const [columns, setColums] = useState([]);
-  const [classes, setClasses] = useState([
-    "Teachers",
-    "Nursery",
-    "KG 1",
-    "KG 2",
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-  ]);
+  const [classes, setClasses] = useState([{label:'Teachers',value:"Teachers" },...JSON.parse(localStorage.getItem('classes'))]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isPopLoading, setIsPopLoading] = useState(false);
@@ -99,15 +82,13 @@ const StudentList = () => {
       setStudents(studentsData);
       debugger;
       setColums(
-        JSON.parse(response.colums[0].validationoptions).map(
-          (option) => {
-            return {
-              title: option,
-              dataIndex: option,
-              key: option,
-            };
-          }
-        )
+        JSON.parse(response.colums[0].validationoptions).map((option) => {
+          return {
+            title: option,
+            dataIndex: option,
+            key: option,
+          };
+        })
       );
       setLoadingStudents(false);
     } catch (error) {
@@ -179,11 +160,16 @@ const StudentList = () => {
     debugger;
     try {
       setIsPopLoading(true);
-      const deleteStudent = await axios.delete(
-        `${apiUrl}/user/deletestudent/${id}`
-      );
+
+      let url = `${apiUrl}/user/deletestudent/${id}`;
+      if (filters.class == "Teachers") {
+        url = `${apiUrl}/teacher/deleteteacher/${id}`;
+      } else {
+        url = `${apiUrl}/user/deletestudent/${id}`;
+      }
+      const deleteStudent = await axios.delete(url);
       await fetchStudents();
-      toast.success("Student deleted successfully.");
+      toast.success(`${filters.class == "Teachers" ? "Teacher" : "Student"} deleted successfully.`);
     } catch (error) {
       toast.error("Failed to delete student.");
     } finally {
@@ -217,7 +203,9 @@ const StudentList = () => {
           </Button>
           <Popconfirm
             title="Delete"
-            description="Are you sure to delete this student?"
+            description={`Are you sure to delete this ${
+              filters.class == "Teachers" ? "teacher" : "student"
+            }?`}
             onConfirm={() => handleDelete(student.id)}
             onCancel={() => console.log("onCancel")}
             okText="Delete"
@@ -268,25 +256,27 @@ const StudentList = () => {
 
   const handleExportCheckList = () => {
     setIsLoading(true);
-  
+
     let studentsArr = students;
-  
+
     // Dynamically identify columns from the first student object that have data
     const tableColumns = Object.keys(studentsArr[0]).filter(
-      (key) => studentsArr[0][key] && studentsArr[0][key] !== "null"&&
-      key !== "imgUrl" && 
-      key !== "updatedAt" &&
-      key !== "createdAt"
+      (key) =>
+        studentsArr[0][key] &&
+        studentsArr[0][key] !== "null" &&
+        key !== "imgUrl" &&
+        key !== "updatedAt" &&
+        key !== "createdAt"
     );
-  
+
     // Include "Image" as the first column
-    const allColumns = ["img", ...tableColumns.filter(col => col !== "img")];
-  
+    const allColumns = ["img", ...tableColumns.filter((col) => col !== "img")];
+
     // Creating table headers
     const tableHeaders = allColumns
       .map((col) => `<th>${col.charAt(0).toUpperCase() + col.slice(1)}</th>`)
       .join("");
-  
+
     // Creating table rows with student data
     const tableRows = studentsArr
       .map((student) => {
@@ -295,15 +285,17 @@ const StudentList = () => {
             ${allColumns
               .map((col) =>
                 col === "img"
-                  ? `<td><img src="${student[col] || ''}" alt="student image" style="width: 50px; height: 50px;" /></td>`
-                  : `<td>${student[col] || ''}</td>`
+                  ? `<td><img src="${
+                      student[col] || ""
+                    }" alt="student image" style="width: 50px; height: 50px;" /></td>`
+                  : `<td>${student[col] || ""}</td>`
               )
               .join("")}
           </tr>
         `;
       })
       .join("");
-  
+
     // Creating the table HTML
     const tableHtml = `
       <table border="1" style="width: 100%; border-collapse: collapse;">
@@ -317,7 +309,7 @@ const StudentList = () => {
         </tbody>
       </table>
     `;
-  
+
     const printHtml = `
       <html>
         <head>
@@ -352,17 +344,16 @@ const StudentList = () => {
         </body>
       </html>
     `;
-  
+
     const printWindow = window.open("", "_blank");
     printWindow.document.write(printHtml);
     printWindow.document.close();
-  
+
     printWindow.onload = () => {
       setIsLoading(false);
       printWindow.print();
     };
   };
-  
 
   if (isLoading) {
     return <Loader />;
@@ -408,37 +399,46 @@ const StudentList = () => {
             >
               <Option value="">Select Class</Option>
               {classes.map((cls) => (
-                <Option key={cls} value={cls}>
-                  {cls}
+                <Option key={cls.value} value={cls.value}>
+                  {cls.label}
                 </Option>
               ))}
             </Select>
 
             <Select
-            placeholder="Select Session"
-            style={{ width: 120 }}
-            value={filters.session}
-            onChange={(value) => handleFilterChange("session", value)}
-            allowClear
-            required
-           
-          >
-            <Option value="">Select Session</Option>
-            {["2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"].map((y) => (
-              <Option  key={y} value={y}>
-                {y}
-              </Option>
-            ))}
-          </Select>
+              placeholder="Select Session"
+              style={{ width: 120 }}
+              value={filters.session}
+              onChange={(value) => handleFilterChange("session", value)}
+              allowClear
+              required
+            >
+              <Option value="">Select Session</Option>
+              {[
+                "2020",
+                "2021",
+                "2022",
+                "2023",
+                "2024",
+                "2025",
+                "2026",
+                "2027",
+                "2028",
+                "2029",
+                "2030",
+              ].map((y) => (
+                <Option key={y} value={y}>
+                  {y}
+                </Option>
+              ))}
+            </Select>
             <Button type="primary" onClick={async () => await fetchStudents()}>
               Fetch Data
             </Button>
           </div>
 
-          
           <div className="d-flex gap-2">
-
-          <Button type="primary" onClick={() => handleExportCheckList()}>
+            <Button type="primary" onClick={() => handleExportCheckList()}>
               Export CheckList
             </Button>
 
@@ -478,7 +478,7 @@ const StudentList = () => {
         toggle={toggle}
         studentsData={studentData}
         validationOptions={columns}
-        isTeacher={filters.class == "Teachers"  ? true : false}
+        isTeacher={filters.class == "Teachers" ? true : false}
       />
 
       {openAdd && (
@@ -523,8 +523,8 @@ const StudentList = () => {
                 >
                   <Option value="">Select Class</Option>
                   {classes.map((cls) => (
-                    <Option key={cls} value={cls}>
-                      {cls}
+                    <Option key={cls.value} value={cls.value}>
+                      {cls.label}
                     </Option>
                   ))}
                 </Select>

@@ -1,21 +1,18 @@
-
-
+import React from "react";
+import Brightness1OutlinedIcon from "@mui/icons-material/Brightness1Outlined";
 const ResizeHandle = () => {
- 
   return (
-    <>
-      {/* Corner Handles */}
-      <div className="handle left-handle top-handle"></div>
-      <div className="handle left-handle bottom-handle"></div>
-      <div className="handle right-handle top-handle"></div>
-      <div className="handle right-handle bottom-handle"></div>
-
-      {/* Middle Handles */}
-      <div className="handle long-handle left-handle"></div>
-      <div className="handle long-handle right-handle"></div>
-      <div className="handle long-handle-horizontal top-handle"></div>
-      <div className="handle long-handle-horizontal bottom-handle"></div>
-    </>
+    <div>
+      <Brightness1OutlinedIcon
+        sx={{
+          fontSize: 6,
+          margin: 0.5,
+          borderColor: 'red',
+          borderWidth: 1,
+          borderRadius: "50%"
+        }}
+      />
+    </div>
   );
 };
 
