@@ -577,7 +577,7 @@ debugger
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px",width: "50%" }}>
           <Select
             placeholder="Select School"
             style={{ width: 200 }}
@@ -630,7 +630,7 @@ debugger
         </div>
 
         {students.length > 0 && (
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px",width: "50%", flexWrap: "wrap" }}>
             <Button type="primary" onClick={handleFrontChanage}>
               Select Front Side
             </Button>
