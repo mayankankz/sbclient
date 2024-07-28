@@ -88,7 +88,7 @@ const ImageUploadModal = ({ isOpen, toggle, addElement }) => {
             <>
             <div style={{width: 120, height: 120}}>
             <img
-              onClick={() => handleClick("image", image)}
+              onClick={() => handleClick("image", image.filePath)}
               style={{ border: "1px dotted black", padding: "10px",width: "100%", height: "100%"}}
              
               key={index}
