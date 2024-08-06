@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Select, Table, Button, Modal, Popconfirm } from "antd";
-
+import React, { useState, useEffect, useRef } from "react";
+import { Select, Table, Button, Modal, Popconfirm, Dropdown, Space, Input } from "antd";
+import { DeleteRowOutlined, DownOutlined, SearchOutlined } from '@ant-design/icons';
 import { toast } from "react-toastify";
 import TabPane from "antd/es/tabs/TabPane";
 import {
@@ -8,6 +8,8 @@ import {
   Done,
   DoneAllOutlined,
   EditOutlined,
+  ImportExport,
+  UpdateOutlined,
 } from "@mui/icons-material";
 import { getAllSchool, getAllStudentBySchool } from "../../../service/student";
 import Loader from "../../../Components/Loader/Loader";
@@ -19,12 +21,14 @@ import axios from "axios";
 import { apiUrl } from "../../../utils/constant";
 import ImportExcelModal from "../../../Components/FileImport/ImportData";
 import AddStudent from "./AddStudent";
-import exportToPdf from "../../../Components/ExportPDF/ExportToPdf";
 const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [schools, setSchools] = useState([]);
   const [columns, setColums] = useState([]);
-  const [classes, setClasses] = useState([{label:'Teachers',value:"Teachers" },...JSON.parse(localStorage.getItem('classes'))]);
+  const [classes, setClasses] = useState([
+    { label: "Teachers", value: "Teachers" },
+    ...JSON.parse(localStorage.getItem("classes")),
+  ]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isPopLoading, setIsPopLoading] = useState(false);
@@ -43,6 +47,115 @@ const StudentList = () => {
   const [openUpdateClass, setOpenUpdateClass] = useState(false);
   const [updatedClass, setUpdatedClass] = useState(null);
   const [openImportModal, setOpenImportModal] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
+  const [ShowPrinted,setShowPrinted] = useState(true);
+
+  const [searchText, setSearchText] = useState('');
+  const [searchedColumn, setSearchedColumn] = useState('');
+  const searchInput = useRef(null);
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText('');
+  };
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: 'block',
+          }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              confirm({
+                closeDropdown: false,
+              });
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn(dataIndex);
+            }}
+          >
+            Filter
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? '#1677ff' : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{
+            backgroundColor: '#ffc069',
+            padding: 0,
+          }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ''}
+        />
+      ) : (
+        text
+      ),
+  });
 
   const handleOpenModal = () => {
     setOpenImportModal(true);
@@ -76,7 +189,8 @@ const StudentList = () => {
       const response = await getAllStudentBySchool(
         filters.school,
         filters.class,
-        filters.session
+        filters.session,
+        ShowPrinted,
       );
       const studentsData = response.students;
       setStudents(studentsData);
@@ -87,6 +201,7 @@ const StudentList = () => {
             title: option,
             dataIndex: option,
             key: option,
+            ...getColumnSearchProps(option)
           };
         })
       );
@@ -106,15 +221,6 @@ const StudentList = () => {
     }));
   };
 
-  function handleSelectStudent(id) {
-    debugger;
-    if (selectedStudent.includes(id)) {
-      const studets = selectedStudent.filter((stu) => stu != id);
-      setSelectedStudent(studets);
-    } else {
-      setSelectedStudent((prev) => [...prev, id]);
-    }
-  }
 
   const filteredStudents = students.filter((student) => {
     return (
@@ -156,6 +262,92 @@ const StudentList = () => {
     }
   }
 
+  async function handleBulkDelete() {
+    if (!selectedStudent.length) {
+      toast.error("Please select at least one student.");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      for (let id of selectedStudent) {
+        let url = `${apiUrl}/user/deletestudent/${id}`;
+        if (filters.class == "Teachers") {
+          url = `${apiUrl}/teacher/deleteteacher/${id}`;
+        } else {
+          url = `${apiUrl}/user/deletestudent/${id}`;
+        }
+        await axios.delete(url);
+      }
+      setSelectedStudent([]);
+      setUpdatedClass(null);
+      setOpenUpdateClass(false);
+      await fetchStudents();
+
+      toast.success("Selected Students Deleted Successfully.");
+    } catch (error) {
+      toast.error("Unable  to update student data.");
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleBulkSetPrinted(){
+    if (!selectedStudent.length) {
+      toast.error("Please select at least one student.");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      for (let id of selectedStudent) {
+        
+
+        const response = await axios.patch(
+          `${apiUrl}/user/updateStudent/${id}`,{
+            isPrinted: true,
+          }
+        );
+      }
+      setSelectedStudent([]);
+      setUpdatedClass(null);
+      setOpenUpdateClass(false);
+      setShowPrinted(true);
+      await fetchStudents();
+
+      toast.success("Selected Students Deleted Successfully.");
+    } catch (error) {
+      toast.error("Unable  to update student data.");
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleSetPrinted(id){
+  debugger
+    try {
+      setIsLoading(true);
+  
+        const response = await axios.patch(
+          `${apiUrl}/user/updateStudent/${id}`,{
+            isPrinted: true,
+          }
+        );
+      
+      setSelectedStudent([]);
+      setUpdatedClass(null);
+      setOpenUpdateClass(false);
+      await fetchStudents();
+
+      toast.success("Selected Students Deleted Successfully.");
+    } catch (error) {
+      toast.error("Unable  to update student data.");
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function handleDelete(id) {
     debugger;
     try {
@@ -169,7 +361,11 @@ const StudentList = () => {
       }
       const deleteStudent = await axios.delete(url);
       await fetchStudents();
-      toast.success(`${filters.class == "Teachers" ? "Teacher" : "Student"} deleted successfully.`);
+      toast.success(
+        `${
+          filters.class == "Teachers" ? "Teacher" : "Student"
+        } deleted successfully.`
+      );
     } catch (error) {
       toast.error("Failed to delete student.");
     } finally {
@@ -219,7 +415,7 @@ const StudentList = () => {
             </Button>
           </Popconfirm>
 
-          <Button onClick={() => console.log(student)}>
+          <Button onClick={() => handleSetPrinted(student.id)}>
             <DoneAllOutlined />
           </Button>
         </div>
@@ -227,9 +423,44 @@ const StudentList = () => {
     },
   ];
 
+
+
+
+  useEffect(() => {
+    if (selectedStudent.length === students.length && students.length > 0) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedStudent, students.length]);
+
+  const handleSelectStudent = (id) => {
+    if (selectedStudent.includes(id)) {
+      const students = selectedStudent.filter((stu) => stu !== id);
+      setSelectedStudent(students);
+    } else {
+      setSelectedStudent((prev) => [...prev, id]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    debugger
+    if (!selectAll) {
+      const allStudentIds = students.map((student) => student.id);
+      setSelectedStudent(allStudentIds);
+    } else {
+      setSelectedStudent([]);
+    }
+    setSelectAll(!selectAll);
+  };
+
   const selectColumns = [
     {
-      title: "Select",
+      title: (
+          <Checkbox onClick={handleSelectAll} checked={selectAll}>
+              <span style={{fontSize: '10px'}}>{selectAll ? "Unselect All" : "Select All"}</span>
+          </Checkbox>
+        ),
       key: "Select",
       width: 25,
       render: (_, student) => (
@@ -242,6 +473,7 @@ const StudentList = () => {
       ),
     },
   ];
+
   const imageColumns = [
     {
       title: "Student Img",
@@ -266,7 +498,10 @@ const StudentList = () => {
         studentsArr[0][key] !== "null" &&
         key !== "imgUrl" &&
         key !== "updatedAt" &&
-        key !== "createdAt"
+        key !== "createdAt" &&
+        key !== "schoolname" &&
+        key !== "schoolcode" &&
+        key !== "id"
     );
 
     // Include "Image" as the first column
@@ -340,6 +575,8 @@ const StudentList = () => {
         </head>
         <body>
           <h1 style="text-align : center;">${studentsArr[0]["schoolname"]}</h1>
+          <h4>Total Students: ${studentsArr.length}</h4>
+
           ${tableHtml}
         </body>
       </html>
@@ -358,6 +595,52 @@ const StudentList = () => {
   if (isLoading) {
     return <Loader />;
   }
+
+  const items = [
+    {
+      label: <div variant="primary" onClick={() => handleOpenModal()}>
+      <ImportExport /> Import Data
+    </div>,
+      key: '0',
+    },
+    {
+      label:  <div type="primary" onClick={() => setOpenUpdateClass(true)}>
+      <UpdateOutlined /> Update Class
+    </div>,
+      key: '1',
+    },
+    {
+      label: <Popconfirm
+      title="Delete"
+      description={`Are you sure to delete this ${
+        filters.class == "Teachers" ? "teacher" : "student"
+      }?`}
+      onConfirm={() => handleBulkDelete()}
+      onCancel={() => console.log("onCancel")}
+      okText="Delete"
+      cancelText="Cancel"
+      okButtonProps={{
+        loading: isPopLoading,
+      }}
+    ><div ><DeleteOutline /> Delete</div> </Popconfirm>,
+      key: '2',
+    },
+    {
+      label:  <div type="primary" onClick={() => handleBulkSetPrinted()}>
+      <DoneAllOutlined /> Printed
+    </div>,
+      key: '1',
+    }
+  ];
+
+  const getRowClassName = (record) => {
+    debugger
+    if (record.isPrinted) {
+        return 'alreadyPrinted';
+    } 
+};
+
+
 
   return (
     <div style={{ padding: "20px" }}>
@@ -432,6 +715,9 @@ const StudentList = () => {
                 </Option>
               ))}
             </Select>
+            <Checkbox style={{display: 'flex' ,alignItems: 'center' , height: "30px"}} onClick={()=> setShowPrinted(!ShowPrinted)} checked={!ShowPrinted}>
+            <span>{"All"}</span>
+        </Checkbox>
             <Button type="primary" onClick={async () => await fetchStudents()}>
               Fetch Data
             </Button>
@@ -445,12 +731,22 @@ const StudentList = () => {
             <Button type="primary" onClick={() => setOpenAdd(true)}>
               Add New Student
             </Button>
-            <Button type="primary" onClick={() => setOpenUpdateClass(true)}>
-              Update Class
-            </Button>
-            <Button variant="primary" onClick={() => handleOpenModal()}>
-              Import Excel
-            </Button>
+           
+            
+
+            <Dropdown
+              menu={{
+                items,
+              }}
+              trigger={["click"]}
+            >
+              <a onClick={(e) => e.preventDefault()}>
+                <Button style={{display: 'flex', alignItems: 'center',justifyContent: 'center', width: 150}} >
+                 Actions
+                  <DownOutlined />
+                </Button>
+              </a>
+            </Dropdown>
           </div>
         </div>
       </div>
@@ -470,6 +766,7 @@ const StudentList = () => {
           pagination={true}
           size="middle"
           rowHoverable={true}
+          rowClassName={getRowClassName}
         />
       )}
 

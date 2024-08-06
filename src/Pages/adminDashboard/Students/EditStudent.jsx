@@ -55,9 +55,9 @@ function EditStudent({isTeacher, studentsData, validationOptions, toggle, isOpen
   }
 
   let validation = validationOptions.map((v) => v.title);
-  const onDateChange = (selectedDate) => {
+  const onDateChange = (selectedDate,date) => {
     debugger;
-    const currentDate = moment(selectedDate).format("DD-MM-YYYY");
+    const currentDate = moment(selectedDate.target.value).format("DD-MM-YYYY");
     setStudent({ ...student, dob: currentDate });
   };
 
@@ -213,7 +213,10 @@ function EditStudent({isTeacher, studentsData, validationOptions, toggle, isOpen
                     <Col lg={4} md={6} sm={12} key={key} className="mb-2">
                       <Typography.Title level={5}>{key}</Typography.Title>
                       {key === "dob" ? (
-                        <Input type="date" onChange={onDateChange} name={key} />
+                        <Input type="date" format={{
+        format: 'YYYY-MM-DD',
+        type: 'mask',
+      }} onChange={onDateChange} name={key} />
                       ) : (
                         <Input
                           onChange={handleOnChange}

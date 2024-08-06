@@ -186,3 +186,7 @@
   top: 50% !important;
   transform: translateY(-8px);
 }
+
+.alreadyPrinted {
+  background-color: #ffbfb9;
+}

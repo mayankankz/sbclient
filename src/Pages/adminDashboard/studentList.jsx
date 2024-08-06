@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Select,
   Table,
@@ -11,6 +11,8 @@ import {
   Spin,
   Tabs,
   Radio,
+  Checkbox,
+  Space,
 } from "antd";
 import { getAllSchool, getAllStudentBySchool } from "../../service/student";
 import { getAllTemplate } from "../../service/idcard";
@@ -21,14 +23,19 @@ import { Col, Container } from "reactstrap";
 import { toast } from "react-toastify";
 import Loader from "../../Components/Loader/Loader";
 import TabPane from "antd/es/tabs/TabPane";
+import { SearchOutlined } from "@ant-design/icons";
+import Highlighter from "react-highlight-words";
 const { Option } = Select;
 
 const StudentList = () => {
   const [students, setStudents] = useState([]);
   const [schools, setSchools] = useState([]);
   const [columns, setColums] = useState([]);
-  const [classes, setClasses] = useState([{label:'Teachers',value:"Teachers" },...JSON.parse(localStorage.getItem('classes'))]);
-
+  const [classes, setClasses] = useState([
+    { label: "Teachers", value: "Teachers" },
+    ...JSON.parse(localStorage.getItem("classes")),
+  ]);
+  const [selectedStudent, setSelectedStudent] = useState([]);
 
   const [sections, setSections] = useState([]);
   const [selectedTemplates, setSelectedTemplates] = useState([]);
@@ -52,11 +59,120 @@ const StudentList = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
+  const [ShowPrinted,setShowPrinted] = useState(true);
 
   const [filters, setFilters] = useState({
     school: "",
     class: "",
     session: new Date().getFullYear().toString(),
+  });
+
+  const [searchText, setSearchText] = useState('');
+  const [searchedColumn, setSearchedColumn] = useState('');
+  const searchInput = useRef(null);
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+  const handleReset = (clearFilters) => {
+    clearFilters();
+    setSearchText('');
+  };
+  const getColumnSearchProps = (dataIndex) => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+      <div
+        style={{
+          padding: 8,
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+      >
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{
+            marginBottom: 8,
+            display: 'block',
+          }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{
+              width: 90,
+            }}
+          >
+            Reset
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              confirm({
+                closeDropdown: false,
+              });
+              setSearchText(selectedKeys[0]);
+              setSearchedColumn(dataIndex);
+            }}
+          >
+            Filter
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <SearchOutlined
+        style={{
+          color: filtered ? '#1677ff' : undefined,
+        }}
+      />
+    ),
+    onFilter: (value, record) =>
+      record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    onFilterDropdownOpenChange: (visible) => {
+      if (visible) {
+        setTimeout(() => searchInput.current?.select(), 100);
+      }
+    },
+    render: (text) =>
+      searchedColumn === dataIndex ? (
+        <Highlighter
+          highlightStyle={{
+            backgroundColor: '#ffc069',
+            padding: 0,
+          }}
+          searchWords={[searchText]}
+          autoEscape
+          textToHighlight={text ? text.toString() : ''}
+        />
+      ) : (
+        text
+      ),
   });
 
   const resetSettings = () => {
@@ -128,7 +244,8 @@ const StudentList = () => {
       const response = await getAllStudentBySchool(
         filters.school,
         filters.class,
-        filters.session
+        filters.session,
+        ShowPrinted,
       );
       const studentsData = response.students;
       setStudents(studentsData);
@@ -139,6 +256,7 @@ const StudentList = () => {
             title: option,
             dataIndex: option,
             key: option,
+            ...getColumnSearchProps(option)
           };
         })
       );
@@ -193,25 +311,30 @@ const StudentList = () => {
 
   const handleExportCheckList = () => {
     setIsLoading(true);
-  
+
     let studentsArr = students;
-  
+
     // Dynamically identify columns from the first student object that have data
     const tableColumns = Object.keys(studentsArr[0]).filter(
-      (key) => studentsArr[0][key] && studentsArr[0][key] !== "null"&&
-      key !== "imgUrl" && 
-      key !== "updatedAt" &&
-      key !== "createdAt"
+      (key) =>
+        studentsArr[0][key] &&
+        studentsArr[0][key] !== "null" &&
+        key !== "imgUrl" &&
+        key !== "updatedAt" &&
+        key !== "createdAt" &&
+        key !== "schoolname" &&
+        key !== "schoolcode" &&
+        key !== "id"
     );
-  
+
     // Include "Image" as the first column
-    const allColumns = ["img", ...tableColumns.filter(col => col !== "img")];
-  
+    const allColumns = ["img", ...tableColumns.filter((col) => col !== "img")];
+
     // Creating table headers
     const tableHeaders = allColumns
       .map((col) => `<th>${col.charAt(0).toUpperCase() + col.slice(1)}</th>`)
       .join("");
-  
+
     // Creating table rows with student data
     const tableRows = studentsArr
       .map((student) => {
@@ -220,18 +343,20 @@ const StudentList = () => {
             ${allColumns
               .map((col) =>
                 col === "img"
-                  ? `<td><img src="${student[col] || ''}" alt="student image" style="width: 50px; height: 50px;" /></td>`
-                  : `<td>${student[col] || ''}</td>`
+                  ? `<td><img src="${
+                      student[col] || ""
+                    }" alt="student image" class="student-img" /></td>`
+                  : `<td>${student[col] || ""}</td>`
               )
               .join("")}
           </tr>
         `;
       })
       .join("");
-  
+
     // Creating the table HTML
     const tableHtml = `
-      <table border="1" style="width: 100%; border-collapse: collapse;">
+      <table class="styled-table">
         <thead>
           <tr>
             ${tableHeaders}
@@ -242,7 +367,7 @@ const StudentList = () => {
         </tbody>
       </table>
     `;
-  
+
     const printHtml = `
       <html>
         <head>
@@ -259,35 +384,125 @@ const StudentList = () => {
               border: none;
               margin: 0;
               padding: 0;
+              font-family: 'Roboto', sans-serif;
+              background-color: #f0f0f0;
+              color: #333;
             }
-            table {
+            h1, h2 {
+              text-align: center;
+              margin: 0;
+            }
+            h1 {
+              margin-top: 20px;
+              font-size: 24px;
+              color: #333;
+            }
+            h2 {
+              margin-top: 10px;
+              font-size: 18px;
+              color: #666;
+            }
+            .styled-table {
               width: 100%;
               border-collapse: collapse;
+              margin: 25px 0;
+              font-size: 0.9em;
+              box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
             }
-            th, td {
-              border: 1px solid black;
-              padding: 8px;
+            .styled-table thead tr {
+              background-color: #EB3E35;
+              color: #ffffff;
               text-align: left;
+            }
+            .styled-table th, .styled-table td {
+              padding: 12px 15px;
+              border: 1px solid black;
+            }
+            .styled-table tbody tr {
+              border: 1px solid #dddddd;
+            }
+            .styled-table tbody tr:nth-of-type(even) {
+              background-color: #f3f3f3;
+            }
+            .styled-table tbody tr:last-of-type {
+              border-bottom: 2px solid #009879;
+            }
+            .styled-table tbody tr.active-row {
+              font-weight: bold;
+              color: #009879;
+            }
+            .student-img {
+              width: 50px;
+              height: 50px;
+             
+              object-fit: cover;
             }
           </style>
         </head>
         <body>
-          <h1 style="text-align : center;">${studentsArr[0]["schoolname"]}</h1>
+          <h1>${studentsArr[0]["schoolname"]}</h1>
           ${tableHtml}
+          <h2>Total Students: ${studentsArr.length}</h2>
         </body>
       </html>
     `;
-  
+
     const printWindow = window.open("", "_blank");
     printWindow.document.write(printHtml);
     printWindow.document.close();
-  
+
     printWindow.onload = () => {
       setIsLoading(false);
       printWindow.print();
     };
   };
-  
+
+  useEffect(() => {
+    if (selectedStudent.length === students.length && students.length > 0) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedStudent, students.length]);
+
+  const handleSelectStudent = (id) => {
+    if (selectedStudent.includes(id)) {
+      const students = selectedStudent.filter((stu) => stu !== id);
+      setSelectedStudent(students);
+    } else {
+      setSelectedStudent((prev) => [...prev, id]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (!selectAll) {
+      const allStudentIds = students.map((student) => student.id);
+      setSelectedStudent(allStudentIds);
+    } else {
+      setSelectedStudent([]);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const selectColumns = [
+    {
+      title: (
+          <Checkbox onClick={handleSelectAll} checked={selectAll}>
+              <span style={{fontSize: '10px'}}>{selectAll ? "Unselect All" : "Select All"}</span>
+          </Checkbox>
+        ),
+      key: "Select",
+      width: 25,
+      render: (_, student) => (
+        <div className="d-flex gap-1 justify-align-content-center w-50 h-50">
+          <Checkbox
+            checked={selectedStudent.includes(student.id)}
+            onChange={() => handleSelectStudent(student.id)}
+          ></Checkbox>
+        </div>
+      ),
+    },
+  ];
 
   const handlePrintAllIDCards = () => {
     if (!selectedTemplates.length) {
@@ -295,7 +510,7 @@ const StudentList = () => {
       return;
     }
     setIsLoading(true);
-debugger
+    debugger;
     const isVertical =
       templates.filter((tpl) => tpl.id === selectedTemplates[0])[0].layout ===
       "Vertical";
@@ -306,7 +521,7 @@ debugger
     if (!setting.rows && !setting.columns) {
       updateRowsAndColumns(rows, columns);
     }
-    let studentsArr = students;
+    let studentsArr = selectedStudent.length > 0 ? selectedStudent : students;
     if (isBackSide) {
       studentsArr = reverseRows(students, columns);
     }
@@ -356,7 +571,7 @@ debugger
           display: grid;
           grid-template-columns: repeat(${setting.columns}, 1fr);
           grid-template-rows: repeat(${setting.rows}, 1fr);
-          grid-row-gap: ${setting.rowSpacing}mm;
+          grid-row-gap: ${isVertical ? 15 : setting.rowSpacing}mm;
           grid-column-gap: ${setting.columnSpacing}mm;
           height: 100%;
           box-sizing: border-box;
@@ -367,7 +582,7 @@ debugger
         .id-card {
           --card-width: 100%;
           --card-height: 100%;
-          --row-gap: ${setting.rowSpacing}mm;
+          --row-gap: ${isVertical ? 15 : setting.rowSpacing}mm;
           --column-gap: ${setting.columnSpacing}mm;
           
           width: var(--card-width);
@@ -494,7 +709,7 @@ debugger
             display: grid;
             grid-template-columns: repeat(${setting.columns}, 1fr);
             grid-template-rows: repeat(${setting.rows}, 1fr);
-            grid-row-gap: ${setting.rowSpacing}mm;
+            grid-row-gap: ${isVertical ? "15" : setting.rowSpacing}mm;
             grid-column-gap: ${setting.columnSpacing}mm;
             height: 100%;
             box-sizing: border-box;
@@ -567,6 +782,13 @@ debugger
     return <Loader />;
   }
 
+  const getRowClassName = (record) => {
+    debugger
+    if (record.isPrinted) {
+        return 'alreadyPrinted';
+    } 
+};
+
   return (
     <div style={{ padding: "20px" }}>
       <h4>Student/Teachers List</h4>
@@ -577,10 +799,17 @@ debugger
           justifyContent: "space-between",
         }}
       >
-        <div style={{ display: "flex", gap: "10px",width: "50%" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            width: "50%",
+            flexWrap: "wrap",
+          }}
+        >
           <Select
             placeholder="Select School"
-            style={{ width: 200 }}
+            style={{ width: 300 }}
             value={filters.school}
             onChange={(value) => handleFilterChange("school", value)}
             allowClear
@@ -594,7 +823,7 @@ debugger
           </Select>
           <Select
             placeholder="Select Class"
-            style={{ width: 120 }}
+            style={{ width: 150 }}
             value={filters.class}
             onChange={(value) => handleFilterChange("class", value)}
             allowClear
@@ -609,28 +838,49 @@ debugger
           </Select>
 
           <Select
-          placeholder="Select Session"
-          style={{ width: 120 }}
-          value={filters.session}
-          onChange={(value) => handleFilterChange("session", value)}
-          allowClear
-          required
-         
-        >
-          <Option value="">Select Session</Option>
-          {["2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029", "2030"].map((y) => (
-            <Option  key={y} value={y}>
-              {y}
-            </Option>
-          ))}
-        </Select>
+            placeholder="Select Session"
+            style={{ width: 120 }}
+            value={filters.session}
+            onChange={(value) => handleFilterChange("session", value)}
+            allowClear
+            required
+          >
+            <Option value="">Select Session</Option>
+            {[
+              "2020",
+              "2021",
+              "2022",
+              "2023",
+              "2024",
+              "2025",
+              "2026",
+              "2027",
+              "2028",
+              "2029",
+              "2030",
+            ].map((y) => (
+              <Option key={y} value={y}>
+                {y}
+              </Option>
+            ))}
+          </Select>
+          <Checkbox style={{display: 'flex' , alignItems: 'center' , height: '30px'}} onClick={()=> setShowPrinted(!ShowPrinted)} checked={!ShowPrinted}>All</Checkbox>
           <Button type="primary" onClick={async () => await fetchStudents()}>
             Fetch Data
           </Button>
+
+          
         </div>
 
         {students.length > 0 && (
-          <div style={{ display: "flex", gap: "10px",width: "50%", flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              width: "50%",
+              flexWrap: "wrap",
+            }}
+          >
             <Button type="primary" onClick={handleFrontChanage}>
               Select Front Side
             </Button>
@@ -947,16 +1197,22 @@ debugger
           </div>
         )}
       </div>
+
       {loadingStudents ? (
         <Loader />
       ) : (
         <Table
           dataSource={students}
-          columns={[...imageColumns, ...columns.concat(actionColumns)]}
+          columns={[
+            ...selectColumns,
+            ...imageColumns,
+            ...columns.concat(actionColumns),
+          ]}
           rowKey="id"
           pagination={true}
           size="small"
           style={{ overflowX: "scroll" }}
+          rowClassName={getRowClassName}
         />
       )}
     </div>

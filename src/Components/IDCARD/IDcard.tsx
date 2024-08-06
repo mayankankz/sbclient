@@ -47,7 +47,7 @@ const IDcard = ({
           el.content
           )}`;
         } else {
-          data[el.fieldMapping];
+          return data[el.fieldMapping];
         }
       }
     }
